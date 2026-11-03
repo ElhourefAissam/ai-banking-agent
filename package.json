@@ -1,0 +1,33 @@
+{
+  "name": "proorga-ai-banking-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Banking Workflow Platform with Multi-Tier Approvals & Controlled Agent Tools",
+  "author": "PROORGA Technical Assessment",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev:api": "pnpm --filter proorga-api dev",
+    "dev:web": "pnpm --filter proorga-web dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:e2e": "pnpm --filter proorga-api test:e2e",
+    "lint": "pnpm -r run lint",
+    "db:migrate": "pnpm --filter proorga-api prisma:migrate",
+    "db:generate": "pnpm --filter proorga-api prisma:generate",
+    "db:seed": "pnpm --filter proorga-api prisma:seed",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "prisma"
+    ]
+  }
+}

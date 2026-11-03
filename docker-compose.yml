@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: proorga_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-proorga}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proorga_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-proorga_banking}
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proorga} -d ${POSTGRES_DB:-proorga_banking}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: proorga_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: proorga_api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 4001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-proorga}:${POSTGRES_PASSWORD:-proorga_secret}@postgres:5432/${POSTGRES_DB:-proorga_banking}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-proorga_banking_ultra_secure_jwt_secret_key_minimum_32_characters_for_production}
+      CORS_ORIGIN: http://localhost:3002
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+    ports:
+      - "${API_PORT:-4001}:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: proorga_web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      WEB_PORT: 3002
+      NEXT_PUBLIC_API_URL: http://localhost:4001/api/v1
+    ports:
+      - "${WEB_PORT:-3002}:3002"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+    name: proorga_postgres_data
+  redis_data:
+    name: proorga_redis_data

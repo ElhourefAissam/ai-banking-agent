@@ -1,0 +1,238 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const client_1 = require("@prisma/client");
+const bcrypt = require("bcrypt");
+const prisma = new client_1.PrismaClient();
+async function main() {
+    console.log('🌱 Starting PROORGA database seeding...');
+    await prisma.aIMessage.deleteMany();
+    await prisma.aIConversation.deleteMany();
+    await prisma.auditEvent.deleteMany();
+    await prisma.bankingActivation.deleteMany();
+    await prisma.decision.deleteMany();
+    await prisma.requestDocument.deleteMany();
+    await prisma.requestVersion.deleteMany();
+    await prisma.limitRequest.deleteMany();
+    await prisma.account.deleteMany();
+    await prisma.customerProfile.deleteMany();
+    await prisma.user.deleteMany();
+    const passwordHash = await bcrypt.hash('Password123!', 10);
+    const client1User = await prisma.user.create({
+        data: {
+            id: 'c1111111-1111-1111-1111-111111111111',
+            email: 'client1@proorga.bank',
+            passwordHash,
+            firstName: 'Karim',
+            lastName: 'Alami',
+            role: client_1.Role.CLIENT,
+        },
+    });
+    const client2User = await prisma.user.create({
+        data: {
+            id: 'c2222222-2222-2222-2222-222222222222',
+            email: 'client2@proorga.bank',
+            passwordHash,
+            firstName: 'Leila',
+            lastName: 'Benjelloun',
+            role: client_1.Role.CLIENT,
+        },
+    });
+    const client3User = await prisma.user.create({
+        data: {
+            id: 'c3333333-3333-3333-3333-333333333333',
+            email: 'client3@proorga.bank',
+            passwordHash,
+            firstName: 'Youssef',
+            lastName: 'Tazi',
+            role: client_1.Role.CLIENT,
+        },
+    });
+    const advisor1User = await prisma.user.create({
+        data: {
+            id: 'a1111111-1111-1111-1111-111111111111',
+            email: 'conseiller1@proorga.bank',
+            passwordHash,
+            firstName: 'Mehdi',
+            lastName: 'Chraibi',
+            role: client_1.Role.CONSEILLER,
+            portfolioId: 'PORTFOLIO_CASA_CENTRE',
+        },
+    });
+    const advisor2User = await prisma.user.create({
+        data: {
+            id: 'a2222222-2222-2222-2222-222222222222',
+            email: 'conseiller2@proorga.bank',
+            passwordHash,
+            firstName: 'Fatima-Zahra',
+            lastName: 'Idrissi',
+            role: client_1.Role.CONSEILLER,
+            portfolioId: 'PORTFOLIO_RABAT_AGDAL',
+        },
+    });
+    const supervisor1User = await prisma.user.create({
+        data: {
+            id: 's1111111-1111-1111-1111-111111111111',
+            email: 'superviseur1@proorga.bank',
+            passwordHash,
+            firstName: 'Omar',
+            lastName: 'Berrada',
+            role: client_1.Role.SUPERVISEUR,
+            teamId: 'TEAM_RETAIL_RISK_NORTH',
+        },
+    });
+    const supervisor2User = await prisma.user.create({
+        data: {
+            id: 's2222222-2222-2222-2222-222222222222',
+            email: 'superviseur2@proorga.bank',
+            passwordHash,
+            firstName: 'Nadia',
+            lastName: 'Mansouri',
+            role: client_1.Role.SUPERVISEUR,
+            teamId: 'TEAM_RETAIL_RISK_NORTH',
+        },
+    });
+    await prisma.user.create({
+        data: {
+            id: 'd1111111-1111-1111-1111-111111111111',
+            email: 'admin@proorga.bank',
+            passwordHash,
+            firstName: 'Tariq',
+            lastName: 'Amrani',
+            role: client_1.Role.ADMIN,
+        },
+    });
+    console.log('✅ Users created.');
+    const profile1 = await prisma.customerProfile.create({
+        data: {
+            id: 'cp111111-1111-1111-1111-111111111111',
+            userId: client1User.id,
+            cin: 'BE849201',
+            fileStatus: client_1.CustomerFileStatus.COMPLETE,
+            address: '42 Boulevard d’Anfa, Casablanca, Maroc',
+            phone: '+212 661 12 34 56',
+        },
+    });
+    const profile2 = await prisma.customerProfile.create({
+        data: {
+            id: 'cp222222-2222-2222-2222-222222222222',
+            userId: client2User.id,
+            cin: 'AA450912',
+            fileStatus: client_1.CustomerFileStatus.COMPLETE,
+            address: '15 Avenue Mohammed V, Rabat, Maroc',
+            phone: '+212 663 98 76 54',
+        },
+    });
+    const profile3 = await prisma.customerProfile.create({
+        data: {
+            id: 'cp333333-3333-3333-3333-333333333333',
+            userId: client3User.id,
+            cin: 'CD772183',
+            fileStatus: client_1.CustomerFileStatus.INCOMPLETE,
+            incompleteReason: 'Justificatif de domicile de moins de 3 mois et renouvellement CIN manquants.',
+            address: '8 Rue Hassan II, Tanger, Maroc',
+            phone: '+212 665 43 21 00',
+        },
+    });
+    console.log('✅ Customer profiles created.');
+    const account1 = await prisma.account.create({
+        data: {
+            id: 'ac111111-1111-1111-1111-111111111111',
+            customerProfileId: profile1.id,
+            accountNumber: '230010000000123456789012',
+            iban: 'MA64230010000000123456789012',
+            balance: 75450.00,
+            initialTransferLimit: 10000.00,
+            currentTransferLimit: 10000.00,
+            currency: 'MAD',
+        },
+    });
+    const account2 = await prisma.account.create({
+        data: {
+            id: 'ac222222-2222-2222-2222-222222222222',
+            customerProfileId: profile2.id,
+            accountNumber: '230010000000987654321098',
+            iban: 'MA64230010000000987654321098',
+            balance: 142800.00,
+            initialTransferLimit: 10000.00,
+            currentTransferLimit: 10000.00,
+            currency: 'MAD',
+        },
+    });
+    const account3 = await prisma.account.create({
+        data: {
+            id: 'ac333333-3333-3333-3333-333333333333',
+            customerProfileId: profile3.id,
+            accountNumber: '230010000000554433221100',
+            iban: 'MA64230010000000554433221100',
+            balance: 28900.00,
+            initialTransferLimit: 10000.00,
+            currentTransferLimit: 10000.00,
+            currency: 'MAD',
+        },
+    });
+    console.log('✅ Accounts created.');
+    const reqEscalated = await prisma.limitRequest.create({
+        data: {
+            id: 'req-escalated-65k',
+            reference: 'REQ-2026-0042',
+            accountId: account2.id,
+            customerProfileId: profile2.id,
+            initialLimit: 10000.00,
+            requestedLimit: 65000.00,
+            durationDays: 4,
+            reason: 'Achat véhicule d’occasion - virement concessionnaire requis sous 48h',
+            status: client_1.LimitRequestStatus.PENDING_SUPERVISOR,
+            version: 2,
+            assignedAdvisorId: advisor1User.id,
+            requiredDocumentsProvided: true,
+            createdAt: new Date(Date.now() - 3600 * 1000 * 6),
+        },
+    });
+    await prisma.requestDocument.create({
+        data: {
+            requestId: reqEscalated.id,
+            fileName: 'bon_commande_vehicule.pdf',
+            fileType: 'application/pdf',
+            fileSize: 245000,
+            storagePath: 'uploads/fictional_bon_commande.pdf',
+            checksum: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            uploadedById: client2User.id,
+        },
+    });
+    await prisma.decision.create({
+        data: {
+            requestId: reqEscalated.id,
+            decisionType: client_1.DecisionType.RECOMMEND_APPROVAL,
+            motive: 'Client patrimonial avec solde supérieur à 140 000 DH. Bon de commande vérifié. Avis très favorable.',
+            targetVersion: 1,
+            actorId: advisor1User.id,
+            actorRole: client_1.Role.CONSEILLER,
+            createdAt: new Date(Date.now() - 3600 * 1000 * 2),
+        },
+    });
+    await prisma.requestVersion.create({
+        data: {
+            requestId: reqEscalated.id,
+            versionNumber: 1,
+            snapshot: {
+                requestedLimit: 65000,
+                durationDays: 4,
+                reason: 'Achat véhicule d’occasion',
+                status: client_1.LimitRequestStatus.SUBMITTED,
+            },
+            changeReason: 'Soumission initiale du client avec justificatif',
+            createdById: client2User.id,
+        },
+    });
+    console.log('✅ Demo request data seeded.');
+    console.log('🎉 Seeding successfully finished!');
+}
+main()
+    .catch((e) => {
+    console.error('❌ Error during seeding:', e);
+    process.exit(1);
+})
+    .finally(async () => {
+    await prisma.$disconnect();
+});
+//# sourceMappingURL=seed.js.map
