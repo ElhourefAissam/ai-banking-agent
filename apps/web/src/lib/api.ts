@@ -239,4 +239,9 @@ export const api = {
       method: 'POST',
     });
   },
+
+  async getAuditTrail(action?: string) {
+    const query = action ? `?action=${action}` : '';
+    return request<any[]>(`/audit${query}`);
+  },
 };

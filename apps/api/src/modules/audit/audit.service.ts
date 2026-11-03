@@ -62,4 +62,23 @@ export class AuditService {
       },
     });
   }
+
+  async getAllAuditEvents(limit = 50, actionFilter?: string) {
+    return this.prisma.auditEvent.findMany({
+      where: actionFilter ? { action: actionFilter } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        actor: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+      },
+    });
+  }
 }

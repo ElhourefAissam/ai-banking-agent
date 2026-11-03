@@ -14,6 +14,7 @@ import { AdvisorWorkspace } from '@/features/advisor/advisor-workspace';
 import { SupervisorWorkspace } from '@/features/supervisor/supervisor-workspace';
 import { AiChatDrawer } from '@/features/ai-chat/ai-chat-drawer';
 import { AuditView } from '@/features/audit/audit-view';
+import { ScenariosRunner } from '@/features/scenarios/scenarios-runner';
 import { api } from '@/lib/api';
 import {
   BankAccountSummary,
@@ -164,6 +165,7 @@ export const AppShell: React.FC = () => {
             )}
 
             {currentTab === 'audit-trail' && <AuditView />}
+            {currentTab === 'scenarios' && <ScenariosRunner />}
           </div>
         </main>
       </div>

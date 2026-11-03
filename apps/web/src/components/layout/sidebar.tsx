@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Bot,
   Activity,
+  Play,
 } from 'lucide-react';
 
 export type NavigationTab =
@@ -22,6 +23,7 @@ export type NavigationTab =
   | 'advisor-dashboard'
   | 'supervisor-dashboard'
   | 'audit-trail'
+  | 'scenarios'
   | 'ai-chat';
 
 interface SidebarProps {
@@ -131,7 +133,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
           </>
         )}
 
-        <div className="pt-4 border-t border-slate-800/80 my-2">
+        <div className="pt-4 border-t border-slate-800/80 my-2 space-y-1">
+          <button
+            onClick={() => onSelectTab('scenarios')}
+            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-medium transition-colors text-start ${
+              currentTab === 'scenarios'
+                ? 'bg-emerald-600 text-white font-semibold shadow-xs'
+                : 'text-emerald-400 hover:bg-slate-800 hover:text-emerald-300'
+            }`}
+          >
+            <Play className="w-4 h-4 shrink-0 fill-current" />
+            <span>Scénarios de Recette (S1-S7)</span>
+          </button>
+
           <button
             onClick={() => onSelectTab('audit-trail')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-medium transition-colors text-start ${

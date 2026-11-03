@@ -11,6 +11,7 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "test:e2e": "pnpm --filter proorga-api test:e2e",
+    "demo:scenarios": "node scripts/replay-scenarios.ts",
     "lint": "pnpm -r run lint",
     "db:migrate": "pnpm --filter proorga-api prisma:migrate",
     "db:generate": "pnpm --filter proorga-api prisma:generate",
