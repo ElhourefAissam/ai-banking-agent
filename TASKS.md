@@ -136,3 +136,24 @@
   - [x] Demo credentials table for all roles.
   - [x] Acceptance scenarios playback instructions.
   - [x] Documented assumptions and architectural trade-offs.
+
+---
+
+## Phase 11: Frontend UI/UX Refinement & Responsive Mobile Design
+- [x] **Tactile Button System**: Upgraded `Button` primitive with micro-interactions (`active:scale-[0.98]`), calibrated padding scale (`xs`, `sm`, `md`, `lg`, `icon`), focus rings, and flex gaps.
+- [x] **Responsive Mobile Navigation**:
+  - [x] Mobile slide-out drawer in `Sidebar` with backdrop blur overlay, auto-close on item selection, and RTL logical positioning (`start-0`).
+  - [x] Hamburger toggle button in `Header` visible on `< md` screens.
+- [x] **Layout & Button Spacing Fixes**:
+  - [x] Replaced legacy `space-x-*` with flexbox `gap-1.5 sm:gap-2` across all table action cells to prevent RTL misalignments.
+  - [x] Made modal footers and form action bars wrap cleanly (`flex-col-reverse sm:flex-row`).
+  - [x] Responsive modal container with `max-h-[90vh]` and internal scroll area.
+- [x] **Quick Action Presets (Mobile & Desktop UX)**:
+  - [x] Added quick amount preset chips (15k, 25k, 35k, 60k, 90k DH) in `NewRequestForm`.
+  - [x] Added quick duration preset chips (1j, 2j, 3j, 5j, 7j) in `NewRequestForm`.
+  - [x] Added horizontal quick prompt suggestion pills in `AiChatDrawer`.
+- [x] **Build & Test Verification**:
+  - [x] Clean Next.js 15 production build with 0 errors (`pnpm --filter proorga-web build`).
+  - [x] 10/10 Banking rule unit tests passing (`pnpm test`).
+  - [x] 18/18 E2E acceptance scenario tests passing (`pnpm test:e2e`).
+  - [x] Standalone CLI scenario runner verified (`pnpm demo:scenarios`).

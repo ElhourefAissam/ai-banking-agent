@@ -181,7 +181,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                 )}
 
                 {/* Actions */}
-                <div className="mt-4 pt-3 flex items-center justify-end gap-2.5">
+                <div className="mt-4 pt-3 flex flex-wrap items-center justify-end gap-2.5">
                   <Button
                     size="sm"
                     variant="danger"

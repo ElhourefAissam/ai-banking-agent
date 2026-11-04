@@ -176,6 +176,24 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
               className="w-full accent-brand-900 h-2 bg-slate-200 rounded-lg cursor-pointer"
             />
 
+            {/* Quick Amount Presets */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              {[15000, 25000, 35000, 60000, 90000].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setRequestedLimit(preset)}
+                  className={`px-2.5 py-1 text-[11px] rounded-lg font-semibold transition-all cursor-pointer ${
+                    requestedLimit === preset
+                      ? 'bg-brand-900 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80'
+                  }`}
+                >
+                  {formatCurrency(preset)}
+                </button>
+              ))}
+            </div>
+
             <div className="flex justify-between text-[11px] text-slate-400">
               <span>Min : 10 001 DH</span>
               <span>Seuil conseiller : 30 000 DH</span>
@@ -221,6 +239,24 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
               onChange={(e) => setDurationDays(Number(e.target.value))}
               className="w-full accent-brand-900 h-2 bg-slate-200 rounded-lg cursor-pointer"
             />
+
+            {/* Quick Duration Presets */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              {[1, 2, 3, 5, 7].map((days) => (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => setDurationDays(days)}
+                  className={`px-2.5 py-1 text-[11px] rounded-lg font-semibold transition-all cursor-pointer ${
+                    durationDays === days
+                      ? 'bg-brand-900 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80'
+                  }`}
+                >
+                  {days} {days > 1 ? t('common.days') : t('common.day')}
+                </button>
+              ))}
+            </div>
 
             <div className="flex justify-between text-[11px] text-slate-400">
               <span>1 jour</span>
@@ -298,7 +334,7 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100">
             <Button type="button" variant="ghost" onClick={onCancel}>
               {t('common.cancel')}
             </Button>
@@ -364,7 +400,7 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-3 border-t border-slate-100">
             <Button
               variant="outline"
               size="sm"

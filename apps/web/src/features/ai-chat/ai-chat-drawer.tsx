@@ -279,13 +279,33 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
         )}
       </div>
 
+      {/* Quick Suggestion Chips */}
+      <div className="px-3 py-2 bg-slate-50/80 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+        {[
+          'Mon plafond actuel et solde ?',
+          'Augmenter mon plafond à 25 000 DH',
+          'Mon dossier client est-il complet ?',
+          'Quelles pièces justificatives ?',
+        ].map((prompt, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => handleSendMessage(prompt)}
+            disabled={isLoading}
+            className="whitespace-nowrap px-2.5 py-1 text-[11px] rounded-lg bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-800 border border-slate-200 hover:border-teal-300 font-medium transition-colors shadow-2xs shrink-0 cursor-pointer disabled:opacity-50"
+          >
+            {prompt}
+          </button>
+        ))}
+      </div>
+
       {/* Input Field */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           handleSendMessage();
         }}
-        className="p-3 border-t border-slate-100 bg-slate-50 flex items-center gap-2"
+        className="p-3 border-t border-slate-200/80 bg-white flex items-center gap-2 shrink-0"
       >
         <input
           type="text"

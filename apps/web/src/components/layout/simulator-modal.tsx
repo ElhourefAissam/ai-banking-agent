@@ -101,7 +101,7 @@ export const SimulatorModal: React.FC<SimulatorModalProps> = ({
           <label className="text-xs font-bold text-slate-800 block mb-2">
             Injecter un scénario de panne pour la prochaine activation :
           </label>
-          <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
             <button
               onClick={() => handleSetMode(SimulationFailureMode.NONE)}
               className={`p-3 rounded-lg border text-start transition-colors ${

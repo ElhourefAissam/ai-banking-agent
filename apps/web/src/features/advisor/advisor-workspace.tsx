@@ -151,7 +151,7 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="w-full sm:w-auto px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
         >
           <option value="ALL">Tous les statuts</option>
           <option value="SUBMITTED">Soumises (À traiter)</option>
@@ -230,45 +230,47 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
                       <td className="py-3.5 px-4 font-mono text-slate-500">
                         v{req.version}
                       </td>
-                      <td className="py-3.5 px-4 text-end space-x-1.5">
-                        {isEligibleForDirectApproval && (
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={() => handleOpenDecision(req, 'APPROVE')}
-                          >
-                            Approuver
-                          </Button>
-                        )}
-
-                        {requiresSupervisorRecommendation && (
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            onClick={() => handleOpenDecision(req, 'RECOMMEND')}
-                          >
-                            Recommander
-                          </Button>
-                        )}
-
-                        {(req.status === 'SUBMITTED' || req.status === 'UNDER_REVIEW') && (
-                          <>
+                      <td className="py-3.5 px-4 text-end">
+                        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                          {isEligibleForDirectApproval && (
                             <Button
                               size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenDecision(req, 'COMPLEMENT')}
+                              variant="success"
+                              onClick={() => handleOpenDecision(req, 'APPROVE')}
                             >
-                              Complément
+                              Approuver
                             </Button>
+                          )}
+
+                          {requiresSupervisorRecommendation && (
                             <Button
                               size="sm"
-                              variant="danger"
-                              onClick={() => handleOpenDecision(req, 'REJECT')}
+                              variant="primary"
+                              onClick={() => handleOpenDecision(req, 'RECOMMEND')}
                             >
-                              Rejeter
+                              Recommander
                             </Button>
-                          </>
-                        )}
+                          )}
+
+                          {(req.status === 'SUBMITTED' || req.status === 'UNDER_REVIEW') && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenDecision(req, 'COMPLEMENT')}
+                              >
+                                Complément
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => handleOpenDecision(req, 'REJECT')}
+                              >
+                                Rejeter
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

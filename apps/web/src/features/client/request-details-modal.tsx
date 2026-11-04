@@ -158,7 +158,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                 required
               />
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                 <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs font-medium text-slate-700 hover:bg-amber-100 transition-colors">
                   <Upload className="w-3.5 h-3.5 text-amber-700" />
                   <span>
@@ -254,7 +254,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
         )}
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-4 border-t border-slate-100">
           <div>
             {isCancelable && (
               <Button
@@ -262,13 +262,14 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                 size="sm"
                 onClick={handleCancel}
                 isLoading={isCancelling}
+                className="w-full sm:w-auto"
               >
                 {t('client.cancelButton')}
               </Button>
             )}
           </div>
 
-          <Button variant="outline" size="sm" onClick={onClose}>
+          <Button variant="outline" size="sm" onClick={onClose} className="w-full sm:w-auto">
             {t('common.close')}
           </Button>
         </div>

@@ -356,7 +356,7 @@ export const ScenariosRunner: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 to-brand-900 text-white rounded-2xl p-6 shadow-md flex items-center justify-between">
+      <div className="bg-gradient-to-r from-slate-900 to-brand-900 text-white rounded-2xl p-6 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1.5">
             <Sparkles className="w-4 h-4" /> Recette & Démonstration Automatisée
