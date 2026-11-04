@@ -11,7 +11,7 @@ import { PlusCircle, FileText, ArrowRight } from 'lucide-react';
 interface MyRequestsViewProps {
   requests: LimitRequestDetail[];
   onNewRequest: () => void;
-  onViewRequest: (requestId: string) => void;
+  onViewRequest: (reference: string) => void;
 }
 
 export const MyRequestsView: React.FC<MyRequestsViewProps> = ({
@@ -61,7 +61,13 @@ export const MyRequestsView: React.FC<MyRequestsViewProps> = ({
                 requests.map((r) => (
                   <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4 font-mono font-bold text-slate-900">
-                      {r.reference}
+                      <button
+                        onClick={() => onViewRequest(r.reference)}
+                        className="hover:underline text-brand-900 font-bold cursor-pointer"
+                        title="Consulter les détails du dossier"
+                      >
+                        {r.reference}
+                      </button>
                     </td>
                     <td className="py-3 px-4 font-mono font-bold text-brand-900">
                       {formatCurrency(Number(r.requestedLimit))}
@@ -79,7 +85,7 @@ export const MyRequestsView: React.FC<MyRequestsViewProps> = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onViewRequest(r.id)}
+                        onClick={() => onViewRequest(r.reference)}
                       >
                         {t('common.details')}
                         <ArrowRight className="w-3.5 h-3.5 ms-1" />

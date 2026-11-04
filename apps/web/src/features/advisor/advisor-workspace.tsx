@@ -31,7 +31,7 @@ import {
 interface AdvisorWorkspaceProps {
   requests: LimitRequestDetail[];
   onRefresh: () => void;
-  onViewRequest: (requestId: string) => void;
+  onViewRequest: (reference: string) => void;
 }
 
 export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
@@ -349,7 +349,7 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
                     <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
                         <button
-                          onClick={() => onViewRequest(req.id)}
+                          onClick={() => onViewRequest(req.reference)}
                           className="hover:underline text-brand-900 font-bold cursor-pointer"
                           title="Cliquer pour afficher les détails et l'historique"
                         >
@@ -392,7 +392,7 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => onViewRequest(req.id)}
+                            onClick={() => onViewRequest(req.reference)}
                             title="Consulter l'historique complet, les versions et les décisions"
                           >
                             <Eye className="w-3.5 h-3.5 me-1 text-slate-500" />

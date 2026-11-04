@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { WorkspaceLayout } from '@/components/layout/workspace-layout';
 import { ClientDashboard } from '@/features/client/client-dashboard';
+import { RequestDetailsDrawer } from '@/features/client/request-details-drawer';
+import { useRequestDrawer } from '@/hooks/use-request-drawer';
 import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
 import { BankAccountSummary, LimitRequestDetail, Role } from '@proorga/shared-types';
@@ -16,6 +18,8 @@ export default function DashboardPage() {
   const [requests, setRequests] = useState<LimitRequestDetail[]>([]);
   const [customerProfile, setCustomerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { requestRef, openRequest, closeRequest, isOpen } = useRequestDrawer();
 
   const loadData = async () => {
     try {
@@ -56,7 +60,13 @@ export default function DashboardPage() {
         requests={requests}
         customerProfile={customerProfile}
         onNewRequest={() => router.push('/requests/new')}
-        onViewRequest={(id) => router.push(`/requests/${id}`)}
+        onViewRequest={openRequest}
+      />
+      <RequestDetailsDrawer
+        requestId={requestRef}
+        isOpen={isOpen}
+        onClose={closeRequest}
+        onRefresh={loadData}
       />
     </WorkspaceLayout>
   );

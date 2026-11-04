@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { NuqsAdapter } from 'nuqs/adapters/react';
 import { I18nProvider } from '@/i18n';
 import { AuthProvider } from '@/features/auth/auth-context';
 
@@ -17,9 +18,11 @@ export default function RootLayout({
   return (
     <html lang="fr" dir="ltr" suppressHydrationWarning>
       <body className="min-h-screen bg-slate-50 antialiased selection:bg-brand-500 selection:text-white">
-        <I18nProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </I18nProvider>
+        <NuqsAdapter>
+          <I18nProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </I18nProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

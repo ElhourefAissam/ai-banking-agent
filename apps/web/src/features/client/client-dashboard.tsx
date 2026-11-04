@@ -21,7 +21,7 @@ interface ClientDashboardProps {
   requests: LimitRequestDetail[];
   customerProfile: any;
   onNewRequest: () => void;
-  onViewRequest: (requestId: string) => void;
+  onViewRequest: (reference: string) => void;
 }
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({
@@ -119,7 +119,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onViewRequest(activeRequest.id)}
+              onClick={() => onViewRequest(activeRequest.reference)}
             >
               {t('common.details')}
             </Button>

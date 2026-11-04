@@ -78,7 +78,11 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
   }, [initialData]);
 
   useEffect(() => {
-    if (isOpen && requestId && (!request || request.id !== requestId)) {
+    if (
+      isOpen &&
+      requestId &&
+      (!request || (request.id !== requestId && request.reference !== requestId))
+    ) {
       loadRequest(requestId);
     }
   }, [isOpen, requestId]);
@@ -100,7 +104,7 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
 
   const handleCopyLink = () => {
     if (typeof window !== 'undefined' && request) {
-      const url = `${window.location.origin}/requests/${request.id}`;
+      const url = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(request.reference)}`;
       navigator.clipboard.writeText(url);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
@@ -116,7 +120,7 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
     try {
       await api.cancelRequest(request.id, { targetVersion: request.version });
       if (onRefresh) onRefresh();
-      await loadRequest(request.id);
+      await loadRequest(request.reference || request.id);
     } catch (err: any) {
       setActionError(err.message || 'Échec de l’annulation.');
     } finally {
@@ -188,7 +192,7 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
 
       setDecisionModalMode(null);
       if (onRefresh) onRefresh();
-      await loadRequest(request.id);
+      await loadRequest(request.reference || request.id);
     } catch (err: any) {
       setActionError(err.message || 'Échec de la décision.');
     } finally {

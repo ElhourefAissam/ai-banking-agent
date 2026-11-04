@@ -171,9 +171,11 @@ export class RequestsService {
     });
   }
 
-  async getRequestById(requestId: string, currentUser: UserSummary) {
-    const request = await this.prisma.limitRequest.findUnique({
-      where: { id: requestId },
+  async getRequestById(requestIdOrRef: string, currentUser: UserSummary) {
+    const request = await this.prisma.limitRequest.findFirst({
+      where: {
+        OR: [{ id: requestIdOrRef }, { reference: requestIdOrRef }],
+      },
       include: {
         account: true,
         customerProfile: {
@@ -216,7 +218,7 @@ export class RequestsService {
     });
 
     if (!request) {
-      throw new NotFoundException(`Request ${requestId} not found`);
+      throw new NotFoundException(`Request ${requestIdOrRef} not found`);
     }
 
     // Role-based authorization & IDOR defense

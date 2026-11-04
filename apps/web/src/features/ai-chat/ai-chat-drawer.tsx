@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 interface AiChatDrawerProps {
-  onSuccessSubmission?: (requestId: string) => void;
+  onSuccessSubmission?: (reference: string) => void;
 }
 
 export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission }) => {
@@ -97,7 +97,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
       );
 
       if (onSuccessSubmission) {
-        onSuccessSubmission(submitted.id);
+        onSuccessSubmission(submitted.reference || submitted.id);
       }
 
       await handleSendMessage(

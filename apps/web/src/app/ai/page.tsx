@@ -12,7 +12,7 @@ export default function AiPage() {
     <WorkspaceLayout>
       <div className="max-w-4xl mx-auto">
         <AiChatDrawer
-          onSuccessSubmission={(id) => router.push(`/requests/${id}`)}
+          onSuccessSubmission={(ref) => router.push(`/requests?ref=${encodeURIComponent(ref)}`)}
         />
       </div>
     </WorkspaceLayout>

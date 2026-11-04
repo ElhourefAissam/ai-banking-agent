@@ -21,7 +21,7 @@ import {
 
 interface NewRequestFormProps {
   accounts: BankAccountSummary[];
-  onSuccess: (requestId: string) => void;
+  onSuccess: (ref: string) => void;
   onCancel: () => void;
 }
 
@@ -116,7 +116,7 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
       });
 
       setIsConfirmationOpen(false);
-      onSuccess(draft.id);
+      onSuccess(draft.reference || draft.id);
     } catch (err: any) {
       console.error('Submission failed:', err);
       setErrorMessage(err.message || 'Une erreur est survenue lors de la soumission.');

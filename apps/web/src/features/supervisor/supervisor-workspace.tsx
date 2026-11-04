@@ -26,7 +26,7 @@ import {
 interface SupervisorWorkspaceProps {
   requests: LimitRequestDetail[];
   onRefresh: () => void;
-  onViewRequest: (requestId: string) => void;
+  onViewRequest: (reference: string) => void;
 }
 
 export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
@@ -180,7 +180,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <button
-                          onClick={() => onViewRequest(req.id)}
+                          onClick={() => onViewRequest(req.reference)}
                           className="text-base font-bold text-slate-900 font-mono hover:underline cursor-pointer"
                           title="Cliquer pour voir l'historique complet"
                         >
@@ -244,7 +244,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onViewRequest(req.id)}
+                      onClick={() => onViewRequest(req.reference)}
                       title="Consulter l'historique complet, les versions et les documents joints"
                     >
                       <Eye className="w-4 h-4 me-1 text-slate-500" />
@@ -308,7 +308,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                       <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
                           <button
-                            onClick={() => onViewRequest(req.id)}
+                            onClick={() => onViewRequest(req.reference)}
                             className="hover:underline text-brand-900 font-bold cursor-pointer"
                           >
                             {req.reference}
@@ -350,7 +350,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => onViewRequest(req.id)}
+                            onClick={() => onViewRequest(req.reference)}
                           >
                             <Eye className="w-3.5 h-3.5 me-1 text-slate-500" />
                             Détails & Historique

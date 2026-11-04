@@ -23,7 +23,7 @@ export default function NewRequestPage() {
     <WorkspaceLayout>
       <NewRequestForm
         accounts={accounts}
-        onSuccess={(newId) => router.push(`/requests/${newId}`)}
+        onSuccess={(newRef) => router.push(`/requests?ref=${encodeURIComponent(newRef)}`)}
         onCancel={() => router.push('/dashboard')}
       />
     </WorkspaceLayout>
