@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -70,42 +69,45 @@ export class CustomersService {
       throw new NotFoundException('User not found');
     }
 
-    // 1. Update User basic information
-    const userUpdates: any = {};
-    if (dto.firstName && dto.firstName.trim().length >= 2) {
-      userUpdates.firstName = dto.firstName.trim();
+    // 1. Guard: strictly forbid modification of sensitive identity/security information
+    const sensitiveAttempts: string[] = [];
+    if (dto.firstName !== undefined && dto.firstName.trim() !== user.firstName) {
+      sensitiveAttempts.push('firstName');
     }
-    if (dto.lastName && dto.lastName.trim().length >= 2) {
-      userUpdates.lastName = dto.lastName.trim();
+    if (dto.lastName !== undefined && dto.lastName.trim() !== user.lastName) {
+      sensitiveAttempts.push('lastName');
     }
-    if (dto.email && dto.email.trim().includes('@')) {
-      const cleanEmail = dto.email.trim().toLowerCase();
-      if (cleanEmail !== user.email.toLowerCase()) {
-        const existing = await this.prisma.user.findUnique({
-          where: { email: cleanEmail },
-        });
-        if (existing) {
-          throw new ConflictException('Cet email est déjà utilisé par un autre compte.');
-        }
-        userUpdates.email = cleanEmail;
-      }
+    if (dto.email !== undefined && dto.email.trim().toLowerCase() !== user.email.toLowerCase()) {
+      sensitiveAttempts.push('email');
     }
-
-    if (Object.keys(userUpdates).length > 0) {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: userUpdates,
-      });
+    if ((dto as any).cin !== undefined && (dto as any).cin !== user.customerProfile?.cin) {
+      sensitiveAttempts.push('cin');
+    }
+    if ((dto as any).role !== undefined && (dto as any).role !== user.role) {
+      sensitiveAttempts.push('role');
+    }
+    if ((dto as any).fileStatus !== undefined && (dto as any).fileStatus !== user.customerProfile?.fileStatus) {
+      sensitiveAttempts.push('fileStatus');
     }
 
-    // 2. Update Customer Profile contact details
+    if (sensitiveAttempts.length > 0) {
+      throw new ForbiddenException(
+        `Modification d'informations sensibles interdite (${sensitiveAttempts.join(', ')}). Conformément aux règles bancaires et aux normes KYC, l'identité légale et l'email ne peuvent être modifiés en ligne. Veuillez contacter votre agence bancaire.`
+      );
+    }
+
+    // 2. Only allow updating non-sensitive contact details: phone, address
+    const updatedFields: string[] = [];
     if (user.customerProfile) {
-      const profileUpdates: any = {};
+      const profileUpdates: { phone?: string; address?: string } = {};
+
       if (dto.phone !== undefined) {
         profileUpdates.phone = dto.phone.trim();
+        updatedFields.push('phone');
       }
       if (dto.address !== undefined) {
         profileUpdates.address = dto.address.trim();
+        updatedFields.push('address');
       }
 
       if (Object.keys(profileUpdates).length > 0) {
@@ -122,15 +124,11 @@ export class CustomersService {
         actorId: user.id,
         actorEmail: user.email,
         actorRole: user.role,
-        action: 'USER_PROFILE_UPDATED',
+        action: 'USER_CONTACT_UPDATED',
         entityType: 'User',
         entityId: user.id,
         details: {
-          updatedFields: Object.keys({
-            ...userUpdates,
-            ...(dto.phone ? { phone: dto.phone } : {}),
-            ...(dto.address ? { address: dto.address } : {}),
-          }),
+          updatedFields,
         },
       },
     });
