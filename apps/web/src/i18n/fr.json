@@ -59,7 +59,31 @@
     "ACTIVATION_FAILED": "Échec d'activation",
     "REJECTED": "Refusée",
     "CANCELLED": "Annulée",
-    "EXPIRED": "Expirée"
+    "EXPIRED": "Expirée",
+    "RECOMMEND_APPROVAL": "Recommandation d'approbation",
+    "APPROVE": "Approuvée",
+    "REJECT": "Refusée",
+    "REQUEST_COMPLEMENT": "Demande de complément",
+    "COMPLETE": "Dossier Complet",
+    "INCOMPLETE": "Dossier Incomplet",
+    "PENDING": "En attente",
+    "SUCCESS": "Actif avec succès",
+    "FAILED": "Échec d'activation"
+  },
+  "decision": {
+    "RECOMMEND_APPROVAL": "Recommandation d'approbation",
+    "APPROVE": "Approbation",
+    "REJECT": "Refus",
+    "REQUEST_COMPLEMENT": "Demande de complément"
+  },
+  "activationStatus": {
+    "PENDING": "En attente",
+    "SUCCESS": "Actif avec succès",
+    "FAILED": "Échec d'activation"
+  },
+  "customerFileStatus": {
+    "COMPLETE": "Dossier Complet",
+    "INCOMPLETE": "Dossier Incomplet"
   },
   "client": {
     "welcome": "Bienvenue dans votre espace bancaire",

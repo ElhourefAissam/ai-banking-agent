@@ -59,7 +59,31 @@
     "ACTIVATION_FAILED": "فشل التفعيل",
     "REJECTED": "مرفوض",
     "CANCELLED": "ملغى",
-    "EXPIRED": "منتهي الصلاحية"
+    "EXPIRED": "منتهي الصلاحية",
+    "RECOMMEND_APPROVAL": "توصية بالموافقة",
+    "APPROVE": "موافقة",
+    "REJECT": "رفض",
+    "REQUEST_COMPLEMENT": "طلب استكمال وثائق",
+    "COMPLETE": "ملف مكتمل",
+    "INCOMPLETE": "ملف غير مكتمل",
+    "PENDING": "قيد الانتظار",
+    "SUCCESS": "تم التفعيل بنجاح",
+    "FAILED": "فشل التفعيل"
+  },
+  "decision": {
+    "RECOMMEND_APPROVAL": "توصية بالموافقة",
+    "APPROVE": "موافقة",
+    "REJECT": "رفض",
+    "REQUEST_COMPLEMENT": "طلب استكمال وثائق"
+  },
+  "activationStatus": {
+    "PENDING": "قيد الانتظار",
+    "SUCCESS": "تم التفعيل بنجاح",
+    "FAILED": "فشل التفعيل"
+  },
+  "customerFileStatus": {
+    "COMPLETE": "ملف مكتمل",
+    "INCOMPLETE": "ملف غير مكتمل"
   },
   "client": {
     "welcome": "مرحبًا بكم في فضائكم المصرفي",

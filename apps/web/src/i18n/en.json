@@ -59,7 +59,31 @@
     "ACTIVATION_FAILED": "Activation Failed",
     "REJECTED": "Rejected",
     "CANCELLED": "Cancelled",
-    "EXPIRED": "Expired"
+    "EXPIRED": "Expired",
+    "RECOMMEND_APPROVAL": "Recommendation for Approval",
+    "APPROVE": "Approved",
+    "REJECT": "Rejected",
+    "REQUEST_COMPLEMENT": "Request for Information",
+    "COMPLETE": "Complete File",
+    "INCOMPLETE": "Incomplete File",
+    "PENDING": "Pending",
+    "SUCCESS": "Successfully Activated",
+    "FAILED": "Activation Failed"
+  },
+  "decision": {
+    "RECOMMEND_APPROVAL": "Recommendation for Approval",
+    "APPROVE": "Approval",
+    "REJECT": "Rejection",
+    "REQUEST_COMPLEMENT": "Request for Information"
+  },
+  "activationStatus": {
+    "PENDING": "Pending",
+    "SUCCESS": "Successfully Activated",
+    "FAILED": "Activation Failed"
+  },
+  "customerFileStatus": {
+    "COMPLETE": "Complete File",
+    "INCOMPLETE": "Incomplete File"
   },
   "client": {
     "welcome": "Welcome to your banking portal",

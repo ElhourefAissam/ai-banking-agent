@@ -319,24 +319,12 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                       className="p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs space-y-1.5"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-1">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`px-2 py-0.5 rounded font-bold text-[10px] ${
-                              d.decisionType === 'APPROVE'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : d.decisionType === 'RECOMMEND_APPROVAL'
-                                ? 'bg-indigo-100 text-indigo-800'
-                                : d.decisionType === 'REQUEST_COMPLEMENT'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-rose-100 text-rose-800'
-                            }`}
-                          >
-                            {d.decisionType}
-                          </span>
-                          <span className="font-bold text-slate-800">
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={d.decisionType} size="sm" />
+                          <span className="font-bold text-slate-800 text-xs">
                             {d.actor
-                              ? `${d.actor.firstName} ${d.actor.lastName} (${d.actor.role})`
-                              : d.actorRole}
+                              ? `${d.actor.firstName} ${d.actor.lastName} (${t(`roles.${d.actor.role}`) || d.actor.role})`
+                              : t(`roles.${d.actorRole}`) || d.actorRole}
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-400 font-mono">

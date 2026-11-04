@@ -334,10 +334,13 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                         </td>
                         <td className="py-3.5 px-4">
                           {latestDecision ? (
-                            <div className="space-y-0.5">
-                              <span className="font-bold text-slate-800 block text-[11px]">
-                                {latestDecision.decisionType} ({latestDecision.actorRole})
-                              </span>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <StatusBadge status={latestDecision.decisionType} size="sm" />
+                                <span className="text-[11px] font-medium text-slate-600">
+                                  ({t(`roles.${latestDecision.actorRole}`) || latestDecision.actorRole})
+                                </span>
+                              </div>
                               <span className="text-[10px] text-slate-500 italic block truncate max-w-xs">
                                 « {latestDecision.motive} »
                               </span>

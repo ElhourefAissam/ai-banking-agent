@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect } from "react";
+import { X } from "lucide-react";
 
 export interface DrawerProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ export interface DrawerProps {
   badge?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  maxWidth?: 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "3xl";
 }
 
 export const Drawer: React.FC<DrawerProps> = ({
@@ -22,32 +22,32 @@ export const Drawer: React.FC<DrawerProps> = ({
   badge,
   children,
   footer,
-  maxWidth = '2xl',
+  maxWidth = "2xl",
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
 
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
-      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const maxWidthClasses = {
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-2xl",
+    "3xl": "max-w-3xl",
   };
 
   return (
@@ -67,7 +67,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           className={`w-screen ${maxWidthClasses[maxWidth]} bg-white shadow-2xl border-s border-slate-200 flex flex-col transform transition-transform animate-in slide-in-from-end duration-300 ease-out`}
         >
           {/* Header */}
-          <div className="px-6 py-4.5 border-b border-slate-200/80 bg-white flex items-center justify-between shrink-0">
+          <div className="px-6 py-4 border-b border-slate-200/80 bg-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5 min-w-0 pe-4">
               <div>
                 <div className="flex items-center gap-2">
