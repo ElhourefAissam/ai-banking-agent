@@ -175,3 +175,27 @@
   - [x] Dual-tab layout: "Dossiers en attente d'arbitrage" and "Historique des dossiers passés".
   - [x] Dedicated "Détails & Historique" button on every card and historical row.
 - [x] **AppShell Wiring**: Connected `onViewRequest={handleOpenRequestDetails}` to both `AdvisorWorkspace` and `SupervisorWorkspace`.
+
+---
+
+## Phase 13: Multi-Page Routing Architecture & Slide-Over Request Drawer
+- [x] **Next.js App Router Multi-Page Migration (Not a Single Page App)**:
+  - [x] `/dashboard`: Client dashboard (accounts, active requests, balance overview).
+  - [x] `/requests`: Client requests history view ("Mes Demandes").
+  - [x] `/requests/new`: New limit request form with interactive sliders and preset chips.
+  - [x] `/requests/[id]`: Request details drawer view with request ID in the link (shareable & refreshable).
+  - [x] `/advisor`: Advisor workspace with portfolio queue, status pills, and search.
+  - [x] `/supervisor`: Supervisor workspace with dual tabs (arbitration queue vs past history).
+  - [x] `/ai`: AI assistant dedicated workspace with controlled banking tools.
+  - [x] `/scenarios`: Scenarios runner test bench for the 7 official PDF scenarios.
+  - [x] `/audit`: Real-time PostgreSQL audit trail explorer.
+  - [x] `/`: Root role-based automatic redirection.
+- [x] **Enterprise Slide-Over Drawer (`apps/web/src/components/ui/drawer.tsx`)**:
+  - [x] Replaced centered modal with slide-over drawer from `end-0` (right in LTR, left in RTL).
+  - [x] Backdrop blur overlay, ESC key listener, focus styles, sticky header and sticky footer.
+  - [x] Responsive width (`w-screen max-w-2xl lg:max-w-3xl`) and scrollable content area.
+- [x] **Shareable & Refreshable Request Links**:
+  - [x] Opening any request navigates to `/requests/[id]` with ID in the URL.
+  - [x] Refreshing (`F5`) or sharing link reloads the request drawer directly with authorization validation.
+  - [x] Added "Partager le lien" copy-to-clipboard action with visual confirmation.
+  - [x] Graceful IDOR defense message if user lacks access to the shared request.

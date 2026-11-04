@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth, DEMO_ACCOUNTS } from '@/features/auth/auth-context';
 import { useTranslation, Locale } from '@/i18n';
 import {
@@ -23,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSimulator,
   onToggleMobileMenu,
 }) => {
+  const router = useRouter();
   const { user, quickSwitch } = useAuth();
   const { locale, setLocale, t } = useTranslation();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -43,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        <div className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-brand-900 flex items-center justify-center text-white font-bold text-base shadow-sm tracking-wider shrink-0">
             PO
           </div>
@@ -60,13 +63,13 @@ export const Header: React.FC<HeaderProps> = ({
               AI Banking Workflow Platform
             </span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Right Actions: AI Chat button, Simulator button, Language Selector, Demo Account Switcher */}
       <div className="flex items-center gap-1.5 sm:gap-2.5">
         {/* Open AI Assistant Button */}
-        {onOpenAiChat && (
+        {onOpenAiChat ? (
           <button
             onClick={onOpenAiChat}
             className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl bg-teal-50 text-teal-800 border border-teal-200/80 hover:bg-teal-100 active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
@@ -75,6 +78,15 @@ export const Header: React.FC<HeaderProps> = ({
             <Sparkles className="w-3.5 h-3.5 text-teal-600 shrink-0" />
             <span className="hidden md:inline">{t('nav.aiAssistant')}</span>
           </button>
+        ) : (
+          <Link
+            href="/ai"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl bg-teal-50 text-teal-800 border border-teal-200/80 hover:bg-teal-100 active:scale-[0.98] transition-all shadow-2xs cursor-pointer"
+            title="Assistant IA Bancaire"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+            <span className="hidden md:inline">{t('nav.aiAssistant')}</span>
+          </Link>
         )}
 
         {/* Simulator Modal Trigger */}
@@ -189,6 +201,10 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={async () => {
                         await quickSwitch(acc.email);
                         setIsUserMenuOpen(false);
+                        if (acc.role === 'CLIENT') router.push('/dashboard');
+                        else if (acc.role === 'CONSEILLER') router.push('/advisor');
+                        else if (acc.role === 'SUPERVISEUR') router.push('/supervisor');
+                        else router.push('/advisor');
                       }}
                       className={`w-full text-start p-2.5 rounded-xl flex items-start gap-2.5 transition-colors cursor-pointer ${
                         isCurrent

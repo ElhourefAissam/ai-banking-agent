@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTranslation } from '@/i18n';
 import { Role } from '@proorga/shared-types';
@@ -14,41 +16,33 @@ import {
   Activity,
   Play,
   X,
-  CreditCard,
 } from 'lucide-react';
 
-export type NavigationTab =
-  | 'client-dashboard'
-  | 'client-new-request'
-  | 'client-my-requests'
-  | 'advisor-dashboard'
-  | 'supervisor-dashboard'
-  | 'audit-trail'
-  | 'scenarios'
-  | 'ai-chat';
-
 interface SidebarProps {
-  currentTab: NavigationTab;
-  onSelectTab: (tab: NavigationTab) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  currentTab,
-  onSelectTab,
   isOpen = false,
   onClose,
 }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const pathname = usePathname();
 
   if (!user) return null;
 
-  const handleItemClick = (tab: NavigationTab) => {
-    onSelectTab(tab);
-    if (onClose) onClose();
-  };
+  const isClientDashboardActive = pathname === '/dashboard';
+  const isNewRequestActive = pathname === '/requests/new';
+  const isMyRequestsActive =
+    pathname === '/requests' ||
+    (pathname.startsWith('/requests/') && pathname !== '/requests/new');
+  const isAiActive = pathname === '/ai';
+  const isAdvisorActive = pathname.startsWith('/advisor');
+  const isSupervisorActive = pathname.startsWith('/supervisor');
+  const isScenariosActive = pathname === '/scenarios';
+  const isAuditActive = pathname === '/audit';
 
   const navContent = (
     <>
@@ -56,114 +50,122 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* CLIENT TABS */}
         {user.role === Role.CLIENT && (
           <>
-            <button
-              onClick={() => handleItemClick('client-dashboard')}
+            <Link
+              href="/dashboard"
+              onClick={() => onClose?.()}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-                currentTab === 'client-dashboard'
+                isClientDashboardActive
                   ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                   : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               }`}
             >
               <LayoutDashboard className="w-4 h-4 shrink-0" />
               <span>{t('nav.dashboard')}</span>
-            </button>
+            </Link>
 
-            <button
-              onClick={() => handleItemClick('client-new-request')}
+            <Link
+              href="/requests/new"
+              onClick={() => onClose?.()}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-                currentTab === 'client-new-request'
+                isNewRequestActive
                   ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                   : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               }`}
             >
               <PlusCircle className="w-4 h-4 shrink-0 text-emerald-400" />
               <span>{t('nav.newRequest')}</span>
-            </button>
+            </Link>
 
-            <button
-              onClick={() => handleItemClick('client-my-requests')}
+            <Link
+              href="/requests"
+              onClick={() => onClose?.()}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-                currentTab === 'client-my-requests'
+                isMyRequestsActive
                   ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                   : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               }`}
             >
               <FileText className="w-4 h-4 shrink-0" />
               <span>{t('nav.myRequests')}</span>
-            </button>
+            </Link>
 
-            <button
-              onClick={() => handleItemClick('ai-chat')}
+            <Link
+              href="/ai"
+              onClick={() => onClose?.()}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-                currentTab === 'ai-chat'
+                isAiActive
                   ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                   : 'text-teal-400 hover:bg-slate-800/80 hover:text-teal-300'
               }`}
             >
               <Bot className="w-4 h-4 shrink-0" />
               <span>{t('nav.aiAssistant')}</span>
-            </button>
+            </Link>
           </>
         )}
 
         {/* ADVISOR TABS */}
         {(user.role === Role.CONSEILLER || user.role === Role.ADMIN) && (
           <>
-            <button
-              onClick={() => handleItemClick('advisor-dashboard')}
+            <Link
+              href="/advisor"
+              onClick={() => onClose?.()}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-                currentTab === 'advisor-dashboard'
+                isAdvisorActive
                   ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                   : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               }`}
             >
               <Users className="w-4 h-4 shrink-0 text-indigo-400" />
               <span>{t('nav.portfolioQueue')}</span>
-            </button>
+            </Link>
           </>
         )}
 
         {/* SUPERVISOR TABS */}
         {(user.role === Role.SUPERVISEUR || user.role === Role.ADMIN) && (
           <>
-            <button
-              onClick={() => handleItemClick('supervisor-dashboard')}
+            <Link
+              href="/supervisor"
+              onClick={() => onClose?.()}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-                currentTab === 'supervisor-dashboard'
+                isSupervisorActive
                   ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                   : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
               }`}
             >
               <ShieldCheck className="w-4 h-4 shrink-0 text-purple-400" />
               <span>{t('nav.supervisorQueue')}</span>
-            </button>
+            </Link>
           </>
         )}
 
         <div className="pt-4 border-t border-slate-800/80 my-2 space-y-1.5">
-          <button
-            onClick={() => handleItemClick('scenarios')}
+          <Link
+            href="/scenarios"
+            onClick={() => onClose?.()}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-              currentTab === 'scenarios'
+              isScenariosActive
                 ? 'bg-emerald-600 text-white font-semibold shadow-xs ring-1 ring-emerald-400/30'
                 : 'text-emerald-400 hover:bg-slate-800/80 hover:text-emerald-300'
             }`}
           >
             <Play className="w-4 h-4 shrink-0 fill-current" />
             <span>Scénarios de Recette (S1-S7)</span>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => handleItemClick('audit-trail')}
+          <Link
+            href="/audit"
+            onClick={() => onClose?.()}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-              currentTab === 'audit-trail'
+              isAuditActive
                 ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
                 : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
             }`}
           >
             <Activity className="w-4 h-4 shrink-0" />
             <span>{t('nav.auditTrail')}</span>
-          </button>
+          </Link>
         </div>
       </nav>
 
