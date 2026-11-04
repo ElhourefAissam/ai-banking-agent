@@ -112,7 +112,10 @@
     "cancelConfirm": "Êtes-vous sûr de vouloir annuler cette demande ? Cette action est irréversible.",
     "cancelButton": "Annuler la demande",
     "complementTitle": "Complément d'information requis par votre conseiller",
-    "complementSubmit": "Régulariser et renvoyer la demande"
+    "complementSubmit": "Régulariser et renvoyer la demande",
+    "viewDoc": "Visualiser",
+    "downloadDoc": "Télécharger",
+    "noDocs": "Aucun document joint à cette demande."
   },
   "advisor": {
     "dashboardTitle": "Espace Conseiller — Gestion du Portefeuille",

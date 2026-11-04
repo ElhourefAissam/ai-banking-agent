@@ -112,7 +112,10 @@
     "cancelConfirm": "Are you sure you want to cancel this request? This action cannot be undone.",
     "cancelButton": "Cancel Request",
     "complementTitle": "Additional Information Requested by Advisor",
-    "complementSubmit": "Update and Resubmit Request"
+    "complementSubmit": "Update and Resubmit Request",
+    "viewDoc": "View",
+    "downloadDoc": "Download",
+    "noDocs": "No document attached to this request."
   },
   "advisor": {
     "dashboardTitle": "Advisor Workspace — Portfolio Management",

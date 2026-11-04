@@ -22,7 +22,10 @@ import {
   User,
   Shield,
   ArrowRight,
+  Eye,
+  Download,
 } from 'lucide-react';
+import { DocumentViewerModal } from '@/features/documents/document-viewer-modal';
 
 interface RequestDetailsModalProps {
   request: LimitRequestDetail | null;
@@ -45,6 +48,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
   const [isSubmittingComplement, setIsSubmittingComplement] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<any | null>(null);
 
   if (!request) return null;
 
@@ -270,33 +274,75 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
 
             {/* Attached Documents */}
             <div>
-              <h4 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
-                <Paperclip className="w-4 h-4 text-slate-500" />
-                Documents joints ({request.documents?.length || 0})
-              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Paperclip className="w-4 h-4 text-brand-700" />
+                  <span>Documents joints ({request.documents?.length || 0})</span>
+                </h4>
+                {request.documents && request.documents.length > 0 && (
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Cliquer pour ouvrir
+                  </span>
+                )}
+              </div>
+
               {request.documents && request.documents.length > 0 ? (
-                <div className="space-y-1.5">
-                  {request.documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-brand-700 shrink-0" />
-                        <span className="font-medium text-slate-800 truncate">
-                          {doc.fileName}
-                        </span>
+                <div className="space-y-2">
+                  {request.documents.map((doc) => {
+                    const isPdf =
+                      doc.fileType === 'application/pdf' ||
+                      doc.fileName.toLowerCase().endsWith('.pdf');
+                    return (
+                      <div
+                        key={doc.id}
+                        className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-brand-300 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer group"
+                        onClick={() => setViewingDocument(doc)}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1 truncate">
+                          <div className="w-7 h-7 rounded-lg bg-brand-50 border border-brand-200/60 flex items-center justify-center shrink-0 text-brand-700">
+                            <FileText className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0 truncate">
+                            <span className="font-semibold text-slate-900 group-hover:text-brand-800 truncate block">
+                              {doc.fileName}
+                            </span>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+                              <span>{(doc.fileSize / 1024).toFixed(0)} Ko</span>
+                              <span>•</span>
+                              <span className="uppercase text-[9px] font-sans font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-600">
+                                {isPdf ? 'PDF' : 'IMAGE'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 ms-2" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => setViewingDocument(doc)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-brand-800 bg-brand-50 hover:bg-brand-100 border border-brand-200/80 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3 text-brand-700" />
+                            <span>Visualiser</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => api.downloadDocument(doc.id, doc.fileName)}
+                            className="p-1.5 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                            title="Télécharger"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-slate-400 text-[10px]">
-                        <span>{(doc.fileSize / 1024).toFixed(0)} Ko</span>
-                        <span>•</span>
-                        <span>{formatDate(doc.uploadedAt)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 italic">Aucun document joint.</p>
+                <p className="text-xs text-slate-400 italic bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  {t('client.noDocs')}
+                </p>
               )}
             </div>
           </div>
@@ -474,6 +520,12 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
           </Button>
         </div>
       </div>
+
+      <DocumentViewerModal
+        isOpen={Boolean(viewingDocument)}
+        document={viewingDocument}
+        onClose={() => setViewingDocument(null)}
+      />
     </Modal>
   );
 };

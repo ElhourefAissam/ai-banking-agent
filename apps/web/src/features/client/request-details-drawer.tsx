@@ -31,7 +31,11 @@ import {
   Share2,
   Copy,
   AlertCircle,
+  Eye,
+  Download,
+  ExternalLink,
 } from 'lucide-react';
+import { DocumentViewerModal } from '@/features/documents/document-viewer-modal';
 
 interface RequestDetailsDrawerProps {
   requestId?: string | null;
@@ -62,6 +66,7 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
   const [isCancelling, setIsCancelling] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<any | null>(null);
 
   // Decision Modal State (if Advisor or Supervisor acts directly from the drawer)
   const [decisionModalMode, setDecisionModalMode] = useState<
@@ -568,32 +573,75 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
 
                 {/* Attached Documents */}
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
-                    <Paperclip className="w-4 h-4 text-slate-500" />
-                    Pièces justificatives jointes ({request.documents?.length || 0})
-                  </h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Paperclip className="w-4 h-4 text-brand-700" />
+                      <span>Pièces justificatives jointes ({request.documents?.length || 0})</span>
+                    </h4>
+                    {request.documents && request.documents.length > 0 && (
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        Cliquer sur un document pour l'ouvrir
+                      </span>
+                    )}
+                  </div>
+
                   {request.documents && request.documents.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {request.documents.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs"
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <FileText className="w-4 h-4 text-brand-700 shrink-0" />
-                            <span className="font-medium text-slate-800 truncate">
-                              {doc.fileName}
-                            </span>
+                    <div className="space-y-2">
+                      {request.documents.map((doc) => {
+                        const isPdf =
+                          doc.fileType === 'application/pdf' ||
+                          doc.fileName.toLowerCase().endsWith('.pdf');
+                        return (
+                          <div
+                            key={doc.id}
+                            className="p-3 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-brand-300 rounded-xl flex items-center justify-between text-xs transition-all shadow-2xs group cursor-pointer"
+                            onClick={() => setViewingDocument(doc)}
+                          >
+                            <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
+                              <div className="w-8 h-8 rounded-lg bg-brand-50 group-hover:bg-brand-100/80 border border-brand-200/60 flex items-center justify-center shrink-0 text-brand-700 transition-colors">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 truncate">
+                                <span className="font-semibold text-slate-900 group-hover:text-brand-800 transition-colors truncate block">
+                                  {doc.fileName}
+                                </span>
+                                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
+                                  <span>{(doc.fileSize / 1024).toFixed(0)} Ko</span>
+                                  <span>•</span>
+                                  <span className="uppercase text-[9px] font-sans font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-600">
+                                    {isPdf ? 'PDF' : 'IMAGE'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0 ms-3" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => setViewingDocument(doc)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-brand-800 bg-brand-50 hover:bg-brand-100 border border-brand-200/80 rounded-lg transition-colors cursor-pointer"
+                                title="Visualiser et lire la pièce justificative"
+                              >
+                                <Eye className="w-3 h-3 text-brand-700" />
+                                <span>{t('client.viewDoc')}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => api.downloadDocument(doc.id, doc.fileName)}
+                                className="p-1.5 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                                title="Télécharger la pièce justificative"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
-                          <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                            {(doc.fileSize / 1024).toFixed(0)} Ko
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      Aucun document joint à cette demande.
+                      {t('client.noDocs')}
                     </p>
                   )}
                 </div>
@@ -750,6 +798,13 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
           </div>
         )}
       </Drawer>
+
+      {/* DOCUMENT PREVIEW & VIEWER MODAL */}
+      <DocumentViewerModal
+        isOpen={Boolean(viewingDocument)}
+        document={viewingDocument}
+        onClose={() => setViewingDocument(null)}
+      />
 
       {/* DECISION ACTION MODAL (IF TRIGGERED FROM DRAWER) */}
       <Modal

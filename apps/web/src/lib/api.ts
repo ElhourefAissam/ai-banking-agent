@@ -217,6 +217,41 @@ export const api = {
     });
   },
 
+  getDocumentFileUrl(documentId: string, download = false): string {
+    const token = getToken();
+    const query = new URLSearchParams();
+    if (token) query.set('token', token);
+    if (download) query.set('download', 'true');
+    const queryString = query.toString();
+    return `${API_BASE_URL}/documents/${documentId}/file${queryString ? `?${queryString}` : ''}`;
+  },
+
+  async downloadDocument(documentId: string, fallbackFileName = 'justificatif.pdf') {
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE_URL}/documents/${documentId}/file?download=true`, {
+      headers,
+    });
+
+    if (!res.ok) {
+      throw new Error(`Échec du téléchargement du document (${res.status})`);
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fallbackFileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 100);
+  },
+
   // AI Assistant
   async sendAiMessage(message: string, conversationId?: string) {
     return request<ChatMessage>('/ai/chat', {
