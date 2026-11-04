@@ -47,7 +47,7 @@ export class BankingSimulatorService {
   async activateLimit(requestId: string, overrideIdempotencyKey?: string) {
     const request = await this.prisma.limitRequest.findUnique({
       where: { id: requestId },
-      include: { account: true },
+      include: { account: true, customerProfile: true },
     });
 
     if (!request) {
@@ -246,6 +246,19 @@ export class BankingSimulatorService {
       },
     });
 
+    if (request.customerProfile?.userId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: request.customerProfile.userId,
+          type: 'LIMIT_ACTIVATED',
+          title: `Plafond temporaire activé — ${request.reference}`,
+          message: `Votre plafond de virement de ${Number(request.requestedLimit).toLocaleString('fr-FR')} DH est maintenant actif jusqu'au ${expiry.toLocaleDateString('fr-FR')}.`,
+          link: `/requests?ref=${request.reference}`,
+          metadata: { reference: request.reference, limitApplied: Number(request.requestedLimit), activeUntil: expiry.toISOString() },
+        },
+      });
+    }
+
     this.logger.log(`Successfully activated limit ${request.requestedLimit} DH for request ${requestId}`);
 
     return {
@@ -261,7 +274,7 @@ export class BankingSimulatorService {
   async restoreLimit(requestId: string) {
     const request = await this.prisma.limitRequest.findUnique({
       where: { id: requestId },
-      include: { account: true, activations: true },
+      include: { account: true, activations: true, customerProfile: true },
     });
 
     if (!request) {
@@ -302,6 +315,19 @@ export class BankingSimulatorService {
         restoredAt: now.toISOString(),
       },
     });
+
+    if (request.customerProfile?.userId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: request.customerProfile.userId,
+          type: 'LIMIT_RESTORED',
+          title: `Plafond standard rétabli — ${request.reference}`,
+          message: `La période temporaire du dossier ${request.reference} est expirée. Votre plafond habituel de ${Number(request.account.initialTransferLimit)} DH a été rétabli.`,
+          link: `/requests?ref=${request.reference}`,
+          metadata: { reference: request.reference, restoredLimit: Number(request.account.initialTransferLimit) },
+        },
+      });
+    }
 
     this.logger.log(
       `Restored initial transfer limit (${request.account.initialTransferLimit} DH) for request ${requestId}`

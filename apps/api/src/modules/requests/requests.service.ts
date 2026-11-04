@@ -16,12 +16,14 @@ import {
   MotivatedDecisionInput,
   RespondComplementInput,
 } from '@proorga/shared-types';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class RequestsService {
   constructor(
     private prisma: PrismaService,
     private workflowService: WorkflowService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async getMyRequests(currentUser: UserSummary) {
@@ -229,6 +231,28 @@ export class RequestsService {
       throw new ForbiddenException({
         code: 'ACCESS_DENIED_IDOR',
         message: 'You are not authorized to view this request.',
+      });
+    }
+
+    // If an advisor opens a SUBMITTED request for examination, transition to UNDER_REVIEW and notify the client
+    if (
+      currentUser.role === Role.CONSEILLER &&
+      request.status === LimitRequestStatus.SUBMITTED
+    ) {
+      await this.prisma.limitRequest.update({
+        where: { id: request.id },
+        data: {
+          status: LimitRequestStatus.UNDER_REVIEW,
+          assignedAdvisorId: currentUser.id,
+        },
+      });
+      request.status = LimitRequestStatus.UNDER_REVIEW;
+      request.assignedAdvisorId = currentUser.id;
+
+      await this.notificationsService.notifyAdvisorReviewing({
+        clientUserId: request.customerProfile.userId,
+        reference: request.reference,
+        advisorName: `${currentUser.firstName} ${currentUser.lastName}`,
       });
     }
 

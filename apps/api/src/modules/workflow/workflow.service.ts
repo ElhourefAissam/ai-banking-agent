@@ -19,6 +19,7 @@ import {
   CreateDraftInput,
   RespondComplementInput,
 } from '@proorga/shared-types';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class WorkflowService {
@@ -28,6 +29,7 @@ export class WorkflowService {
     private prisma: PrismaService,
     private auditService: AuditService,
     private bankingSimulator: BankingSimulatorService,
+    private notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -308,6 +310,15 @@ export class WorkflowService {
       details: { reference: request.reference, requestedLimit: amt, durationDays: request.durationDays },
     });
 
+    await this.notificationsService.notifyRequestSubmitted({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      requestedLimit: amt,
+      durationDays: request.durationDays,
+      clientName: `${currentUser.firstName} ${currentUser.lastName}`,
+      assignedAdvisorId: request.assignedAdvisorId,
+    });
+
     return updated;
   }
 
@@ -330,6 +341,7 @@ export class WorkflowService {
 
     const request = await this.prisma.limitRequest.findUnique({
       where: { id: requestId },
+      include: { customerProfile: true },
     });
 
     if (!request) {
@@ -391,6 +403,12 @@ export class WorkflowService {
       entityId: request.id,
       entityVersion: nextVersion,
       details: { motive },
+    });
+
+    await this.notificationsService.notifyDocumentsRequired({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      motive: motive.trim(),
     });
 
     return updated;
@@ -476,6 +494,15 @@ export class WorkflowService {
       details: { explanation: dto.additionalExplanation, requestedLimit: newAmt },
     });
 
+    await this.notificationsService.notifyRequestSubmitted({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      requestedLimit: newAmt,
+      durationDays: newDur,
+      clientName: `${currentUser.firstName} ${currentUser.lastName}`,
+      assignedAdvisorId: request.assignedAdvisorId,
+    });
+
     return updated;
   }
 
@@ -498,6 +525,7 @@ export class WorkflowService {
 
     const request = await this.prisma.limitRequest.findUnique({
       where: { id: requestId },
+      include: { customerProfile: true },
     });
 
     if (!request) {
@@ -561,6 +589,13 @@ export class WorkflowService {
       details: { motive, recommendedBy: currentUser.email },
     });
 
+    await this.notificationsService.notifySupervisorPending({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      requestedLimit: Number(request.requestedLimit),
+      advisorName: `${currentUser.firstName} ${currentUser.lastName}`,
+    });
+
     return updated;
   }
 
@@ -581,7 +616,7 @@ export class WorkflowService {
 
     const request = await this.prisma.limitRequest.findUnique({
       where: { id: requestId },
-      include: { decisions: true },
+      include: { decisions: true, customerProfile: true },
     });
 
     if (!request) {
@@ -687,6 +722,13 @@ export class WorkflowService {
       details: { motive, approvedBy: currentUser.email, role: currentUser.role },
     });
 
+    await this.notificationsService.notifyRequestApproved({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      requestedLimit: Number(request.requestedLimit),
+      approverName: `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})`,
+    });
+
     // Automatically trigger banking simulator activation asynchronously
     try {
       await this.bankingSimulator.activateLimit(requestId);
@@ -725,6 +767,7 @@ export class WorkflowService {
 
     const request = await this.prisma.limitRequest.findUnique({
       where: { id: requestId },
+      include: { customerProfile: true },
     });
 
     if (!request) {
@@ -786,6 +829,13 @@ export class WorkflowService {
       entityId: request.id,
       entityVersion: nextVersion,
       details: { motive, rejectedBy: currentUser.email },
+    });
+
+    await this.notificationsService.notifyRequestRejected({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      motive: motive.trim(),
+      rejecterName: `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})`,
     });
 
     return updated;

@@ -173,5 +173,14 @@
     "fileStatusTitle": "Customer File Compliance Status",
     "accountsTitle": "Associated Bank Accounts",
     "memberSince": "Member since"
+  },
+  "notifications": {
+    "title": "Notification Center",
+    "all": "All",
+    "unread": "Unread",
+    "markAllAsRead": "Mark all as read",
+    "empty": "No notifications at the moment.",
+    "emptyUnread": "All your notifications are read!",
+    "unreadBadge": "unread"
   }
 }

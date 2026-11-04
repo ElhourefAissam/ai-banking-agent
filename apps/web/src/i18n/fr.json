@@ -173,5 +173,14 @@
     "fileStatusTitle": "Statut de Conformité du Dossier",
     "accountsTitle": "Comptes Bancaires Associés",
     "memberSince": "Membre depuis le"
+  },
+  "notifications": {
+    "title": "Centre de Notifications",
+    "all": "Toutes",
+    "unread": "Non lues",
+    "markAllAsRead": "Tout marquer comme lu",
+    "empty": "Aucune notification pour le moment.",
+    "emptyUnread": "Toutes vos notifications sont lues !",
+    "unreadBadge": "non lue(s)"
   }
 }

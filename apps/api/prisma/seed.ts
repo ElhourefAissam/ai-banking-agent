@@ -10,6 +10,7 @@ async function main() {
   await prisma.aIMessage.deleteMany();
   await prisma.aIConversation.deleteMany();
   await prisma.auditEvent.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.bankingActivation.deleteMany();
   await prisma.decision.deleteMany();
   await prisma.requestDocument.deleteMany();
@@ -259,6 +260,85 @@ async function main() {
       changeReason: 'Soumission initiale du client avec justificatif',
       createdById: client2User.id,
     },
+  });
+
+  // Seed Notifications for Demo Accounts
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: client1User.id,
+        type: 'REQUEST_SUBMITTED',
+        title: 'Demande REQ-2026-0001 soumise',
+        message: 'Votre demande de relèvement à 25 000 DH (3 jours) a été transmise à votre banque.',
+        link: '/requests?ref=REQ-2026-0001',
+        read: true,
+        metadata: { reference: 'REQ-2026-0001', requestedLimit: 25000 },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 24),
+      },
+      {
+        userId: client1User.id,
+        type: 'ADVISOR_REVIEWING',
+        title: "Dossier en cours d'examen — REQ-2026-0001",
+        message: 'Votre conseiller (Hassan Benali) étudie actuellement les éléments de votre dossier.',
+        link: '/requests?ref=REQ-2026-0001',
+        read: true,
+        metadata: { reference: 'REQ-2026-0001' },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 20),
+      },
+      {
+        userId: client1User.id,
+        type: 'REQUEST_APPROVED',
+        title: 'Demande approuvée — REQ-2026-0001',
+        message: 'Excellente nouvelle ! Votre demande de relèvement à 25 000 DH a été formellement validée par Hassan Benali (CONSEILLER).',
+        link: '/requests?ref=REQ-2026-0001',
+        read: false,
+        metadata: { reference: 'REQ-2026-0001', requestedLimit: 25000 },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 4),
+      },
+      {
+        userId: client1User.id,
+        type: 'LIMIT_ACTIVATED',
+        title: 'Plafond temporaire activé — REQ-2026-0001',
+        message: 'Votre plafond de virement de 25 000 DH est maintenant actif sur votre compte principal.',
+        link: '/requests?ref=REQ-2026-0001',
+        read: false,
+        metadata: { reference: 'REQ-2026-0001', limitApplied: 25000 },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 3),
+      },
+      // Client 2 (Escalated flow)
+      {
+        userId: client2User.id,
+        type: 'SUPERVISOR_PENDING',
+        title: 'Arbitrage hiérarchique — REQ-2026-0042',
+        message: 'Votre demande de 65 000 DH a été recommandée favorablement et transmise au superviseur pour arbitrage.',
+        link: '/requests?ref=REQ-2026-0042',
+        read: false,
+        metadata: { reference: 'REQ-2026-0042', requestedLimit: 65000 },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 2),
+      },
+      // Advisor 1
+      {
+        userId: advisor1User.id,
+        type: 'REQUEST_SUBMITTED',
+        title: 'Nouveau dossier REQ-2026-0042',
+        message: 'Dossier de 65 000 DH soumis par Fatima Zahra Bennani. En attente de votre revue.',
+        link: '/advisor?ref=REQ-2026-0042',
+        read: true,
+        metadata: { reference: 'REQ-2026-0042', requestedLimit: 65000 },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 6),
+      },
+      // Supervisor 1
+      {
+        userId: supervisor1User.id,
+        type: 'SUPERVISOR_PENDING',
+        title: 'Validation superviseur requise — REQ-2026-0042',
+        message: 'Dossier de 65 000 DH recommandé par Hassan Benali. En attente de votre décision hiérarchique.',
+        link: '/supervisor?ref=REQ-2026-0042',
+        read: false,
+        metadata: { reference: 'REQ-2026-0042', requestedLimit: 65000 },
+        createdAt: new Date(Date.now() - 3600 * 1000 * 2),
+      },
+    ],
   });
 
   console.log('✅ Demo request data seeded.');

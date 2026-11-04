@@ -14,6 +14,7 @@ import {
   RespondComplementInput,
   UserProfileDetail,
   UpdateProfileInput,
+  NotificationItem,
 } from '@proorga/shared-types';
 
 const API_BASE_URL =
@@ -303,5 +304,26 @@ export const api = {
   async getAuditTrail(action?: string) {
     const query = action ? `?action=${action}` : '';
     return request<any[]>(`/audit${query}`);
+  },
+
+  // Notifications
+  async getNotifications(limit = 50) {
+    return request<NotificationItem[]>(`/notifications?limit=${limit}`);
+  },
+
+  async getUnreadNotificationCount() {
+    return request<{ unreadCount: number }>('/notifications/unread-count');
+  },
+
+  async markNotificationAsRead(id: string) {
+    return request<NotificationItem>(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  async markAllNotificationsAsRead() {
+    return request<{ count: number }>('/notifications/read-all', {
+      method: 'POST',
+    });
   },
 };

@@ -14,6 +14,7 @@ import {
   Menu,
   User,
 } from 'lucide-react';
+import { NotificationCenter } from '@/features/notifications/notification-center';
 
 interface HeaderProps {
   onOpenAiChat?: () => void;
@@ -101,6 +102,9 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden lg:inline">{t('nav.simulator')}</span>
           </button>
         )}
+
+        {/* Smart Notification Center */}
+        <NotificationCenter />
 
         {/* Language Selector */}
         <div className="relative">

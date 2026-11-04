@@ -11,6 +11,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
 import { RequestsModule } from './modules/requests/requests.module';
 import { AiModule } from './modules/ai/ai.module';
 import { HealthModule } from './modules/health/health.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { HealthModule } from './modules/health/health.module';
     RequestsModule,
     AiModule,
     HealthModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

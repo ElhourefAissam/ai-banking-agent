@@ -46,6 +46,17 @@ enum ActivationStatus {
   FAILED
 }
 
+enum NotificationType {
+  REQUEST_SUBMITTED
+  ADVISOR_REVIEWING
+  DOCUMENTS_REQUIRED
+  SUPERVISOR_PENDING
+  REQUEST_APPROVED
+  REQUEST_REJECTED
+  LIMIT_ACTIVATED
+  LIMIT_RESTORED
+}
+
 model User {
   id           String           @id @default(uuid())
   email        String           @unique
@@ -62,6 +73,7 @@ model User {
   decisions       Decision[]
   conversations   AIConversation[]
   auditEvents     AuditEvent[]
+  notifications   Notification[]
 
   @@index([role])
   @@index([portfolioId])
@@ -251,4 +263,22 @@ model AIMessage {
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String           @db.Text
+  link      String?
+  read      Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }

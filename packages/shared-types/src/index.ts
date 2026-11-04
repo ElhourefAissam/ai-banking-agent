@@ -313,6 +313,30 @@ export interface UserProfileDetail extends UserSummary {
   createdAt?: string;
 }
 
+export enum NotificationType {
+  REQUEST_SUBMITTED = 'REQUEST_SUBMITTED',
+  ADVISOR_REVIEWING = 'ADVISOR_REVIEWING',
+  DOCUMENTS_REQUIRED = 'DOCUMENTS_REQUIRED',
+  SUPERVISOR_PENDING = 'SUPERVISOR_PENDING',
+  REQUEST_APPROVED = 'REQUEST_APPROVED',
+  REQUEST_REJECTED = 'REQUEST_REJECTED',
+  LIMIT_ACTIVATED = 'LIMIT_ACTIVATED',
+  LIMIT_RESTORED = 'LIMIT_RESTORED',
+}
+
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string | null;
+  read: boolean;
+  metadata?: Record<string, any> | null;
+  createdAt: string;
+  readAt?: string | null;
+}
+
 export interface EligibilityResult {
   isEligible: boolean;
   reasons: string[];

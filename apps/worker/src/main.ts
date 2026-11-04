@@ -26,7 +26,11 @@ async function processExpirations() {
       },
     },
     include: {
-      account: true,
+      account: {
+        include: {
+          customerProfile: true,
+        },
+      },
     },
   });
 
@@ -53,6 +57,16 @@ async function processExpirations() {
             where: { requestId: req.id },
             data: {
               restoredAt: now,
+            },
+          }),
+          prisma.notification.create({
+            data: {
+              userId: req.account.customerProfile.userId,
+              type: 'LIMIT_RESTORED',
+              title: `Plafond standard rétabli — ${req.reference}`,
+              message: `La période temporaire du dossier ${req.reference} est expirée. Votre plafond habituel de ${Number(req.account.initialTransferLimit)} DH a été rétabli.`,
+              link: `/requests?ref=${req.reference}`,
+              metadata: { reference: req.reference, restoredLimit: Number(req.account.initialTransferLimit) },
             },
           }),
           prisma.auditEvent.create({
