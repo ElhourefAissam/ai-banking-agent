@@ -12,6 +12,7 @@ import {
   Cpu,
   Sparkles,
   Menu,
+  User,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -184,6 +185,17 @@ export const Header: React.FC<HeaderProps> = ({
 
           {isUserMenuOpen && (
             <div className="absolute end-0 mt-1.5 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in-0 zoom-in-95">
+              <div className="p-1 border-b border-slate-100 mb-1">
+                <Link
+                  href="/profile"
+                  onClick={() => setIsUserMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-800 hover:bg-brand-50 hover:text-brand-900 transition-colors"
+                >
+                  <User className="w-4 h-4 text-brand-700" />
+                  <span>{t('nav.profile')}</span>
+                </Link>
+              </div>
+
               <div className="px-3 py-2 border-b border-slate-100 mb-1 flex items-center justify-between">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                   {t('common.switchUser')}

@@ -77,6 +77,7 @@ interface AuthContextType {
   login: (email: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
   quickSwitch: (email: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -85,6 +86,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   quickSwitch: async () => {},
+  refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -132,6 +134,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await login(email);
   };
 
+  const refreshUser = async () => {
+    try {
+      const profile = await api.getMe();
+      setUser(profile);
+    } catch (e) {
+      console.warn('Failed to refresh user profile:', e);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -140,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         quickSwitch,
+        refreshUser,
       }}
     >
       {children}

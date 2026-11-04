@@ -46,7 +46,8 @@
     "supervisorQueue": "Dossiers Escaladés",
     "auditTrail": "Piste d'Audit",
     "simulator": "Simulateur Bancaire",
-    "aiAssistant": "Assistant IA"
+    "aiAssistant": "Assistant IA",
+    "profile": "Mon Profil"
   },
   "status": {
     "DRAFT": "Brouillon",
@@ -149,5 +150,23 @@
     "confirmationCardTitle": "Brouillon préparé par l'IA",
     "confirmationCardSubtitle": "Veuillez valider formellement les paramètres ci-dessous pour soumettre :",
     "confirmAndSubmit": "Valider et soumettre définitivement"
+  },
+  "profile": {
+    "title": "Mon Profil Utilisateur",
+    "subtitle": "Consultez et mettez à jour vos informations personnelles, coordonnées et comptes bancaires.",
+    "personalInfo": "Informations Personnelles",
+    "contactInfo": "Coordonnées & Résidence",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Adresse Email",
+    "phone": "Numéro de téléphone",
+    "address": "Adresse de résidence",
+    "cin": "Carte Nationale d'Identité (CIN)",
+    "cinNotice": "Identifiant bancaire officiel vérifié lors de l'ouverture de compte (non modifiable en ligne).",
+    "saveChanges": "Enregistrer les modifications",
+    "updateSuccess": "Votre profil a été mis à jour avec succès et consigné dans la piste d'audit bancaire.",
+    "fileStatusTitle": "Statut de Conformité du Dossier",
+    "accountsTitle": "Comptes Bancaires Associés",
+    "memberSince": "Membre depuis le"
   }
 }

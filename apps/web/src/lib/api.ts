@@ -12,6 +12,8 @@ import {
   SubmitRequestInput,
   MotivatedDecisionInput,
   RespondComplementInput,
+  UserProfileDetail,
+  UpdateProfileInput,
 } from '@proorga/shared-types';
 
 const API_BASE_URL =
@@ -98,7 +100,29 @@ export const api = {
   },
 
   async getMyProfile() {
-    return request<any>('/customers/me');
+    return request<UserProfileDetail>('/customers/me');
+  },
+
+  async updateMyProfile(payload: UpdateProfileInput) {
+    return request<UserProfileDetail>('/customers/me', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async updateCustomerProfile(
+    id: string,
+    payload: {
+      fileStatus?: string;
+      incompleteReason?: string;
+      phone?: string;
+      address?: string;
+    }
+  ) {
+    return request<any>(`/customers/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
   },
 
   // Requests

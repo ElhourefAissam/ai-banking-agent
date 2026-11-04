@@ -46,7 +46,8 @@
     "supervisorQueue": "Escalated Requests",
     "auditTrail": "Audit Trail",
     "simulator": "Banking Simulator",
-    "aiAssistant": "AI Assistant"
+    "aiAssistant": "AI Assistant",
+    "profile": "My Profile"
   },
   "status": {
     "DRAFT": "Draft",
@@ -149,5 +150,23 @@
     "confirmationCardTitle": "Draft Prepared by AI",
     "confirmationCardSubtitle": "Please formally review the parameters below to submit:",
     "confirmAndSubmit": "Confirm & Formally Submit"
+  },
+  "profile": {
+    "title": "My User Profile",
+    "subtitle": "View and manage your personal details, contact information, and bank accounts.",
+    "personalInfo": "Personal Information",
+    "contactInfo": "Contact & Residence",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "address": "Residential Address",
+    "cin": "National Identity Card (CIN)",
+    "cinNotice": "Official bank-verified identifier recorded at account creation (immutable online).",
+    "saveChanges": "Save Changes",
+    "updateSuccess": "Your profile has been successfully updated and recorded in the audit trail.",
+    "fileStatusTitle": "Customer File Compliance Status",
+    "accountsTitle": "Associated Bank Accounts",
+    "memberSince": "Member since"
   }
 }

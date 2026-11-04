@@ -34,6 +34,27 @@ describe('PROORGA — 7 Official Technical Assignment Acceptance Scenarios', () 
 
     prisma = app.get(PrismaService);
 
+    // Clean up limit requests from client1 and non-seed requests
+    await prisma.bankingActivation.deleteMany({
+      where: { requestId: { not: 'req-escalated-65k' } },
+    });
+    await prisma.requestDocument.deleteMany({
+      where: { requestId: { not: 'req-escalated-65k' } },
+    });
+    await prisma.decision.deleteMany({
+      where: { requestId: { not: 'req-escalated-65k' } },
+    });
+    await prisma.requestVersion.deleteMany({
+      where: { requestId: { not: 'req-escalated-65k' } },
+    });
+    await prisma.limitRequest.deleteMany({
+      where: { id: { not: 'req-escalated-65k' } },
+    });
+    await prisma.account.updateMany({
+      where: { id: { not: 'ac222222-2222-2222-2222-222222222222' } },
+      data: { currentTransferLimit: 10000, activeLimitExpiry: null },
+    });
+
     // Authenticate users
     const resC1 = await request(app.getHttpServer())
       .post('/api/v1/auth/login')

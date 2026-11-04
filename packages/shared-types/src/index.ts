@@ -295,6 +295,24 @@ export type SubmitRequestInput = SubmitRequestDto;
 export type MotivatedDecisionInput = MotivatedDecisionDto;
 export type RespondComplementInput = RespondComplementDto;
 
+export interface UpdateProfileInput {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  email?: string;
+}
+
+export interface UserProfileDetail extends UserSummary {
+  cin?: string;
+  phone?: string;
+  address?: string;
+  fileStatus?: CustomerFileStatus;
+  incompleteReason?: string | null;
+  accounts?: BankAccountSummary[];
+  createdAt?: string;
+}
+
 export interface EligibilityResult {
   isEligible: boolean;
   reasons: string[];

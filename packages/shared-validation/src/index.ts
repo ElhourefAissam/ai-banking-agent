@@ -101,9 +101,18 @@ export const SimulationFailureOverrideSchema = z.object({
   mode: z.nativeEnum(SimulationFailureMode),
 });
 
+export const UpdateProfileSchema = z.object({
+  firstName: z.string().trim().min(2, 'Le prénom doit contenir au moins 2 caractères').optional(),
+  lastName: z.string().trim().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
+  phone: z.string().trim().min(6, 'Numéro de téléphone invalide').optional(),
+  address: z.string().trim().min(5, 'Adresse trop courte').optional(),
+  email: z.string().email('Email invalide').optional(),
+});
+
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type CreateDraftInput = z.infer<typeof CreateDraftSchema>;
 export type UpdateDraftInput = z.infer<typeof UpdateDraftSchema>;
 export type SubmitRequestInput = z.infer<typeof SubmitRequestSchema>;
 export type MotivatedDecisionInput = z.infer<typeof MotivatedDecisionSchema>;
 export type RespondComplementInput = z.infer<typeof RespondComplementSchema>;
+export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;

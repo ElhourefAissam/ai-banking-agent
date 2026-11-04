@@ -15,6 +15,7 @@ import {
   Bot,
   Activity,
   Play,
+  User,
   X,
 } from 'lucide-react';
 
@@ -43,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isSupervisorActive = pathname.startsWith('/supervisor');
   const isScenariosActive = pathname === '/scenarios';
   const isAuditActive = pathname === '/audit';
+  const isProfileActive = pathname === '/profile';
 
   const navContent = (
     <>
@@ -139,6 +141,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           </>
         )}
+
+        <Link
+          href="/profile"
+          onClick={() => onClose?.()}
+          className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
+            isProfileActive
+              ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
+              : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+          }`}
+        >
+          <User className="w-4 h-4 shrink-0 text-slate-400" />
+          <span>{t('nav.profile')}</span>
+        </Link>
 
         <div className="pt-4 border-t border-slate-800/80 my-2 space-y-1.5">
           <Link
