@@ -12,20 +12,35 @@ export default function NewRequestPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<BankAccountSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      api.getMyAccounts().then(setAccounts).catch(console.warn);
+      setIsLoading(true);
+      api
+        .getMyAccounts()
+        .then((data) => {
+          setAccounts(data);
+        })
+        .catch(console.warn)
+        .finally(() => setIsLoading(false));
     }
   }, [user?.email]);
 
   return (
     <WorkspaceLayout>
-      <NewRequestForm
-        accounts={accounts}
-        onSuccess={(newRef) => router.push(`/requests?ref=${encodeURIComponent(newRef)}`)}
-        onCancel={() => router.push('/dashboard')}
-      />
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-3">
+          <div className="w-8 h-8 border-3 border-brand-900 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-medium">Chargement de vos comptes bancaires...</span>
+        </div>
+      ) : (
+        <NewRequestForm
+          accounts={accounts}
+          onSuccess={(newRef) => router.push(`/requests?ref=${encodeURIComponent(newRef)}`)}
+          onCancel={() => router.push('/dashboard')}
+        />
+      )}
     </WorkspaceLayout>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
@@ -44,7 +44,15 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
+  // Synchronize selectedAccountId when accounts load asynchronously
+  useEffect(() => {
+    if ((!selectedAccountId || !accounts.some((a) => a.id === selectedAccountId)) && accounts.length > 0) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
+
   // Validation rules
+  const activeAccountId = selectedAccountId || accounts[0]?.id;
   const isAmountValid =
     requestedLimit > BANKING_RULES.INITIAL_TRANSFER_LIMIT &&
     requestedLimit <= BANKING_RULES.MAX_REQUESTED_LIMIT;
@@ -56,6 +64,7 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
   const hasDocument = Boolean(uploadedFile);
 
   const canProceedToConfirm =
+    Boolean(activeAccountId) &&
     isAmountValid &&
     isDurationValid &&
     isReasonValid &&
@@ -64,6 +73,12 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
   const handleOpenConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    const targetAccountId = selectedAccountId || accounts[0]?.id;
+    if (!targetAccountId) {
+      setErrorMessage('Aucun compte bancaire éligible sélectionné.');
+      return;
+    }
 
     if (!isAmountValid) {
       setErrorMessage(
@@ -93,13 +108,19 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
   };
 
   const handleFinalSubmit = async () => {
+    const targetAccountId = selectedAccountId || accounts[0]?.id;
+    if (!targetAccountId) {
+      setErrorMessage('Veuillez sélectionner un compte bancaire actif.');
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
       // 1. Create Draft
       const draft = await api.createDraft({
-        accountId: selectedAccountId,
+        accountId: targetAccountId,
         requestedLimit,
         durationDays,
         reason: reason.trim(),

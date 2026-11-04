@@ -35,8 +35,32 @@ export class WorkflowService {
    */
   private async generateReference(): Promise<string> {
     const year = new Date().getFullYear();
-    const count = await this.prisma.limitRequest.count();
-    return `REQ-${year}-${String(count + 1).padStart(4, '0')}`;
+    const prefix = `REQ-${year}-`;
+
+    const latest = await this.prisma.limitRequest.findFirst({
+      where: { reference: { startsWith: prefix } },
+      orderBy: { reference: 'desc' },
+      select: { reference: true },
+    });
+
+    let nextNumber = 1;
+    if (latest?.reference) {
+      const parts = latest.reference.split('-');
+      const lastNum = parseInt(parts[2], 10);
+      if (!isNaN(lastNum)) {
+        nextNumber = lastNum + 1;
+      }
+    }
+
+    let ref = `${prefix}${String(nextNumber).padStart(4, '0')}`;
+    let exists = await this.prisma.limitRequest.findUnique({ where: { reference: ref } });
+    while (exists) {
+      nextNumber++;
+      ref = `${prefix}${String(nextNumber).padStart(4, '0')}`;
+      exists = await this.prisma.limitRequest.findUnique({ where: { reference: ref } });
+    }
+
+    return ref;
   }
 
   /**
@@ -57,13 +81,31 @@ export class WorkflowService {
    * 1. CREATE DRAFT
    */
   async createDraft(currentUser: UserSummary, dto: CreateDraftInput) {
+    let targetAccountId = dto.accountId?.trim();
+
+    // If client submits without explicit accountId (or empty string), automatically resolve their primary account
+    if (!targetAccountId) {
+      if (currentUser.role === Role.CLIENT) {
+        const clientAccount = await this.prisma.account.findFirst({
+          where: { customerProfile: { userId: currentUser.id } },
+          orderBy: { createdAt: 'asc' },
+        });
+        if (!clientAccount) {
+          throw new NotFoundException('No bank account found for this customer');
+        }
+        targetAccountId = clientAccount.id;
+      } else {
+        throw new BadRequestException('A valid accountId is required');
+      }
+    }
+
     const account = await this.prisma.account.findUnique({
-      where: { id: dto.accountId },
+      where: { id: targetAccountId },
       include: { customerProfile: true },
     });
 
     if (!account) {
-      throw new NotFoundException(`Account ${dto.accountId} not found`);
+      throw new NotFoundException(`Account ${targetAccountId} not found`);
     }
 
     if (currentUser.role === Role.CLIENT && account.customerProfile.userId !== currentUser.id) {
@@ -73,7 +115,7 @@ export class WorkflowService {
     // Check if account already has an in-flight or active limit request
     const existingActiveOrPending = await this.prisma.limitRequest.findFirst({
       where: {
-        accountId: dto.accountId,
+        accountId: targetAccountId,
         status: {
           in: [
             LimitRequestStatus.SUBMITTED,
@@ -99,7 +141,7 @@ export class WorkflowService {
     const request = await this.prisma.limitRequest.create({
       data: {
         reference,
-        accountId: dto.accountId,
+        accountId: targetAccountId,
         customerProfileId: account.customerProfileId,
         initialLimit: account.initialTransferLimit,
         requestedLimit: dto.requestedLimit,
