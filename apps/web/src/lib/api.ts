@@ -111,8 +111,9 @@ export const api = {
     return request<LimitRequestDetail[]>(`/requests/advisor-queue${query}`);
   },
 
-  async getSupervisorQueue() {
-    return request<LimitRequestDetail[]>('/requests/supervisor-queue');
+  async getSupervisorQueue(status?: LimitRequestStatus) {
+    const query = status ? `?status=${status}` : '';
+    return request<LimitRequestDetail[]>(`/requests/supervisor-queue${query}`);
   },
 
   async getRequestById(id: string) {

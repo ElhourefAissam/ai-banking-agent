@@ -23,16 +23,21 @@ import {
   Filter,
   ShieldAlert,
   Paperclip,
+  Eye,
+  History,
+  Clock,
 } from 'lucide-react';
 
 interface AdvisorWorkspaceProps {
   requests: LimitRequestDetail[];
   onRefresh: () => void;
+  onViewRequest: (requestId: string) => void;
 }
 
 export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
   requests,
   onRefresh,
+  onViewRequest,
 }) => {
   const { t, formatCurrency, formatDate } = useTranslation();
 
@@ -44,18 +49,70 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'ACTIONABLE' | 'ACTIVE' | 'SUPERVISOR' | 'PAST'>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
+  // Filter requests based on search and category/status
   const filteredRequests = requests.filter((r) => {
     const matchesSearch =
       r.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.customerProfile?.user?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.customerProfile?.user?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.customerProfile?.cin?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
+    if (!matchesSearch) return false;
 
-    return matchesSearch && matchesStatus;
+    // Status filter dropdown override
+    if (statusFilter !== 'ALL') {
+      return r.status === statusFilter;
+    }
+
+    // Category tabs
+    if (categoryFilter === 'ACTIONABLE') {
+      return (
+        r.status === 'SUBMITTED' ||
+        r.status === 'UNDER_REVIEW' ||
+        r.status === 'COMPLEMENT_REQUESTED'
+      );
+    }
+    if (categoryFilter === 'SUPERVISOR') {
+      return r.status === 'PENDING_SUPERVISOR';
+    }
+    if (categoryFilter === 'ACTIVE') {
+      return r.status === 'ACTIVE' || r.status === 'APPROVED_PENDING_ACTIVATION';
+    }
+    if (categoryFilter === 'PAST') {
+      return (
+        r.status === 'REJECTED' ||
+        r.status === 'EXPIRED' ||
+        r.status === 'CANCELLED'
+      );
+    }
+
+    return true;
   });
+
+  const actionableCount = requests.filter(
+    (r) =>
+      r.status === 'SUBMITTED' ||
+      r.status === 'UNDER_REVIEW' ||
+      r.status === 'COMPLEMENT_REQUESTED'
+  ).length;
+
+  const supervisorCount = requests.filter(
+    (r) => r.status === 'PENDING_SUPERVISOR'
+  ).length;
+
+  const pastCount = requests.filter(
+    (r) =>
+      r.status === 'REJECTED' ||
+      r.status === 'EXPIRED' ||
+      r.status === 'CANCELLED'
+  ).length;
+
+  const activeCount = requests.filter(
+    (r) => r.status === 'ACTIVE' || r.status === 'APPROVED_PENDING_ACTIVATION'
+  ).length;
 
   const handleOpenDecision = (
     req: LimitRequestDetail,
@@ -128,11 +185,97 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 font-bold text-xs">
             {requests.length} Dossier(s) Total
           </span>
+          {actionableCount > 0 && (
+            <span className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs">
+              {actionableCount} À instruire
+            </span>
+          )}
         </div>
+      </div>
+
+      {/* Quick Category Filter Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => {
+            setCategoryFilter('ALL');
+            setStatusFilter('ALL');
+          }}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${
+            categoryFilter === 'ALL' && statusFilter === 'ALL'
+              ? 'bg-brand-900 text-white shadow-2xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          Tous les dossiers ({requests.length})
+        </button>
+
+        <button
+          onClick={() => {
+            setCategoryFilter('ACTIONABLE');
+            setStatusFilter('ALL');
+          }}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+            categoryFilter === 'ACTIONABLE' && statusFilter === 'ALL'
+              ? 'bg-amber-600 text-white shadow-2xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          <span>À instruire en priorité</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold">
+            {actionableCount}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setCategoryFilter('ACTIVE');
+            setStatusFilter('ALL');
+          }}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${
+            categoryFilter === 'ACTIVE' && statusFilter === 'ALL'
+              ? 'bg-emerald-600 text-white shadow-2xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          Plafonds actifs ({activeCount})
+        </button>
+
+        <button
+          onClick={() => {
+            setCategoryFilter('SUPERVISOR');
+            setStatusFilter('ALL');
+          }}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${
+            categoryFilter === 'SUPERVISOR' && statusFilter === 'ALL'
+              ? 'bg-purple-600 text-white shadow-2xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          En attente superviseur ({supervisorCount})
+        </button>
+
+        <button
+          onClick={() => {
+            setCategoryFilter('PAST');
+            setStatusFilter('ALL');
+          }}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+            categoryFilter === 'PAST' && statusFilter === 'ALL'
+              ? 'bg-slate-800 text-white shadow-2xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          <History className="w-3.5 h-3.5" />
+          <span>Historique passé</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 font-bold">
+            {pastCount}
+          </span>
+        </button>
       </div>
 
       {/* Filter & Search Bar */}
@@ -150,15 +293,22 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCategoryFilter('ALL');
+          }}
           className="w-full sm:w-auto px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
         >
-          <option value="ALL">Tous les statuts</option>
+          <option value="ALL">Tous les statuts ({requests.length})</option>
           <option value="SUBMITTED">Soumises (À traiter)</option>
           <option value="COMPLEMENT_REQUESTED">Complément requis</option>
           <option value="PENDING_SUPERVISOR">En attente superviseur</option>
           <option value="ACTIVE">Actives</option>
-          <option value="ACTIVATION_FAILED">Échec activation</option>
+          <option value="APPROVED_PENDING_ACTIVATION">Approuvées en attente d'activation</option>
+          <option value="ACTIVATION_FAILED">Échec activation switch</option>
+          <option value="REJECTED">Historique : Rejetées</option>
+          <option value="EXPIRED">Historique : Expirées & Rétablies</option>
+          <option value="CANCELLED">Historique : Annulées par client</option>
         </select>
       </div>
 
@@ -175,14 +325,14 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
                 <th className="py-3 px-4 text-start">Justificatif</th>
                 <th className="py-3 px-4 text-start">Statut</th>
                 <th className="py-3 px-4 text-start">Version</th>
-                <th className="py-3 px-4 text-end">Actions</th>
+                <th className="py-3 px-4 text-end">Actions & Traçabilité</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400 italic">
-                    Aucun dossier ne correspond aux filtres.
+                  <td colSpan={8} className="py-10 text-center text-slate-400 italic">
+                    Aucun dossier ne correspond aux critères de recherche ou de filtre.
                   </td>
                 </tr>
               ) : (
@@ -198,7 +348,13 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
                   return (
                     <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                        {req.reference}
+                        <button
+                          onClick={() => onViewRequest(req.id)}
+                          className="hover:underline text-brand-900 font-bold cursor-pointer"
+                          title="Cliquer pour afficher les détails et l'historique"
+                        >
+                          {req.reference}
+                        </button>
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-900">
@@ -232,6 +388,17 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-end">
                         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                          {/* Details & Historique Button for EVERY request */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onViewRequest(req.id)}
+                            title="Consulter l'historique complet, les versions et les décisions"
+                          >
+                            <Eye className="w-3.5 h-3.5 me-1 text-slate-500" />
+                            Détails & Historique
+                          </Button>
+
                           {isEligibleForDirectApproval && (
                             <Button
                               size="sm"
@@ -307,13 +474,21 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Montant demandé :</span>
-              <span className="font-bold text-brand-900">
+              <span className="font-bold text-brand-900 text-sm">
                 {formatCurrency(Number(selectedRequest?.requestedLimit || 0))}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Motif client :</span>
-              <span className="italic text-slate-700">« {selectedRequest?.reason} »</span>
+              <span className="text-slate-500">Durée :</span>
+              <span className="font-semibold text-slate-800">
+                {selectedRequest?.durationDays} {t('common.days')}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Version du dossier :</span>
+              <span className="font-mono text-slate-700">
+                v{selectedRequest?.version}
+              </span>
             </div>
           </div>
 

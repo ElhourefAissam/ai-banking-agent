@@ -46,8 +46,11 @@ export class RequestsController {
 
   @Get('supervisor-queue')
   @Roles(Role.SUPERVISEUR, Role.ADMIN)
-  async getSupervisorQueue(@CurrentUser() user: UserSummary) {
-    return this.requestsService.getSupervisorQueue(user);
+  async getSupervisorQueue(
+    @CurrentUser() user: UserSummary,
+    @Query('status') status?: LimitRequestStatus,
+  ) {
+    return this.requestsService.getSupervisorQueue(user, status);
   }
 
   @Get(':id')

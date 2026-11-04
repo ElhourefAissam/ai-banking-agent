@@ -40,8 +40,25 @@ export class RequestsService {
         account: true,
         decisions: {
           orderBy: { createdAt: 'desc' },
+          include: {
+            actor: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+              },
+            },
+          },
         },
         documents: true,
+        versions: {
+          orderBy: { versionNumber: 'desc' },
+        },
+        activations: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
   }
@@ -52,51 +69,7 @@ export class RequestsService {
     }
 
     return this.prisma.limitRequest.findMany({
-      where: {
-        status: statusFilter
-          ? statusFilter
-          : {
-              in: [
-                LimitRequestStatus.SUBMITTED,
-                LimitRequestStatus.UNDER_REVIEW,
-                LimitRequestStatus.COMPLEMENT_REQUESTED,
-                LimitRequestStatus.PENDING_SUPERVISOR,
-                LimitRequestStatus.APPROVED_PENDING_ACTIVATION,
-                LimitRequestStatus.ACTIVE,
-                LimitRequestStatus.ACTIVATION_FAILED,
-              ],
-            },
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        account: true,
-        customerProfile: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-        decisions: true,
-        documents: true,
-      },
-    });
-  }
-
-  async getSupervisorQueue(currentUser: UserSummary) {
-    if (currentUser.role !== Role.SUPERVISEUR && currentUser.role !== Role.ADMIN) {
-      throw new ForbiddenException('Only supervisors can access the escalated requests queue');
-    }
-
-    return this.prisma.limitRequest.findMany({
-      where: {
-        status: LimitRequestStatus.PENDING_SUPERVISOR,
-      },
+      where: statusFilter ? { status: statusFilter } : {},
       orderBy: { createdAt: 'desc' },
       include: {
         account: true,
@@ -113,6 +86,7 @@ export class RequestsService {
           },
         },
         decisions: {
+          orderBy: { createdAt: 'desc' },
           include: {
             actor: {
               select: {
@@ -128,6 +102,70 @@ export class RequestsService {
         documents: true,
         versions: {
           orderBy: { versionNumber: 'desc' },
+        },
+        activations: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+  }
+
+  async getSupervisorQueue(currentUser: UserSummary, statusFilter?: LimitRequestStatus) {
+    if (currentUser.role !== Role.SUPERVISEUR && currentUser.role !== Role.ADMIN) {
+      throw new ForbiddenException('Only supervisors can access the escalated requests queue');
+    }
+
+    return this.prisma.limitRequest.findMany({
+      where: statusFilter
+        ? { status: statusFilter }
+        : {
+            OR: [
+              { status: LimitRequestStatus.PENDING_SUPERVISOR },
+              { requestedLimit: { gt: 30000 } },
+              {
+                decisions: {
+                  some: {
+                    actorRole: Role.SUPERVISEUR,
+                  },
+                },
+              },
+            ],
+          },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        account: true,
+        customerProfile: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        decisions: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            actor: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+              },
+            },
+          },
+        },
+        documents: true,
+        versions: {
+          orderBy: { versionNumber: 'desc' },
+        },
+        activations: {
+          orderBy: { createdAt: 'desc' },
         },
       },
     });

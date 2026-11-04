@@ -157,3 +157,21 @@
   - [x] 10/10 Banking rule unit tests passing (`pnpm test`).
   - [x] 18/18 E2E acceptance scenario tests passing (`pnpm test:e2e`).
   - [x] Standalone CLI scenario runner verified (`pnpm demo:scenarios`).
+
+---
+
+## Phase 12: Request History & Past Requests Visibility (Advisor & Supervisor)
+- [x] **Full Request History & Audit Modal (`RequestDetailsModal`)**:
+  - [x] Switchable tabs: "Vue Générale & Justificatifs" vs "Historique & Traçabilité Complète" (with total items counter badge).
+  - [x] **Versions History (`RequestVersion`)**: Timeline of all version snapshots (v1, v2, v3...), timestamp, requested limit snapshot, duration, and amendment reason.
+  - [x] **Decisions History (`Decision`)**: Chronological audit trail showing actor's full name, role, email, decision type badge, date/time, and mandatory motive.
+  - [x] **Switch & Core Activations (`BankingActivation`)**: Displays switch activation status (`SUCCESS` / `FAILED`), idempotency key, activation time, and limit restoration on expiration.
+- [x] **Conseiller / Advisor Workspace Past Requests & History**:
+  - [x] Backend `getAdvisorQueue` updated to return both pending and past requests (`APPROVED`, `REJECTED`, `EXPIRED`, `CANCELLED`, `ACTIVE`).
+  - [x] Quick filter pills: "Tous les dossiers", "À instruire en priorité", "Plafonds actifs", "En attente superviseur", "Historique passé".
+  - [x] Dedicated "Détails & Historique" button with `Eye` icon on every table row.
+- [x] **Superviseur / Supervisor Workspace Past Requests & History**:
+  - [x] Backend `getSupervisorQueue` updated to return escalated queue (`PENDING_SUPERVISOR`) AND historical dossiers (> 30k DH, past supervisor decisions).
+  - [x] Dual-tab layout: "Dossiers en attente d'arbitrage" and "Historique des dossiers passés".
+  - [x] Dedicated "Détails & Historique" button on every card and historical row.
+- [x] **AppShell Wiring**: Connected `onViewRequest={handleOpenRequestDetails}` to both `AdvisorWorkspace` and `SupervisorWorkspace`.

@@ -158,6 +158,7 @@ export const AppShell: React.FC = () => {
               <AdvisorWorkspace
                 requests={requests}
                 onRefresh={loadData}
+                onViewRequest={handleOpenRequestDetails}
               />
             )}
 
@@ -165,6 +166,7 @@ export const AppShell: React.FC = () => {
               <SupervisorWorkspace
                 requests={requests}
                 onRefresh={loadData}
+                onViewRequest={handleOpenRequestDetails}
               />
             )}
 

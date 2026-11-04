@@ -166,6 +166,7 @@ export interface LimitRequestDetail {
   documents?: RequestDocumentSummary[];
   decisions?: DecisionRecord[];
   versions?: RequestVersionRecord[];
+  activations?: BankingActivationRecord[];
 }
 
 export interface BankingActivationRecord {
