@@ -204,7 +204,8 @@ export const Header: React.FC<HeaderProps> = ({
                         if (acc.role === 'CLIENT') router.push('/dashboard');
                         else if (acc.role === 'CONSEILLER') router.push('/advisor');
                         else if (acc.role === 'SUPERVISEUR') router.push('/supervisor');
-                        else router.push('/advisor');
+                        else if (acc.role === 'ADMIN') router.push('/audit');
+                        else router.push('/dashboard');
                       }}
                       className={`w-full text-start p-2.5 rounded-xl flex items-start gap-2.5 transition-colors cursor-pointer ${
                         isCurrent
@@ -228,7 +229,9 @@ export const Header: React.FC<HeaderProps> = ({
                                 ? 'bg-blue-100 text-blue-700'
                                 : acc.role === 'CONSEILLER'
                                 ? 'bg-indigo-100 text-indigo-700'
-                                : 'bg-purple-100 text-purple-700'
+                                : acc.role === 'SUPERVISEUR'
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-amber-100 text-amber-800'
                             }`}
                           >
                             {acc.role}

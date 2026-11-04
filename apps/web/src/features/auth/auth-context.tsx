@@ -62,6 +62,13 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     description: 'Superviseur Risques (Séparation des tâches)',
     badge: 'Superviseur 2',
   },
+  {
+    email: 'admin@proorga.bank',
+    name: 'Tariq Amrani',
+    role: Role.ADMIN,
+    description: 'Administrateur Général (Conformité, Audit & Contrôle)',
+    badge: 'Administrateur',
+  },
 ];
 
 interface AuthContextType {

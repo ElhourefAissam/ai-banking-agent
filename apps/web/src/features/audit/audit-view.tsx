@@ -11,16 +11,21 @@ export const AuditView: React.FC = () => {
   const { t, formatDate } = useTranslation();
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDetails, setSelectedDetails] = useState<any | null>(null);
 
   const fetchLogs = async () => {
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const data = await api.getAuditTrail();
       setLogs(data);
-    } catch (e) {
+    } catch (e: any) {
       console.warn('Failed to load audit trail:', e);
+      setErrorMessage(
+        e.message || "Erreur d'habilitation lors de la récupération des logs d'audit."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +64,12 @@ export const AuditView: React.FC = () => {
           Actualiser
         </Button>
       </div>
+
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800">
+          <strong>Accès Refusé :</strong> {errorMessage}
+        </div>
+      )}
 
       {/* Search Input */}
       <div className="relative">

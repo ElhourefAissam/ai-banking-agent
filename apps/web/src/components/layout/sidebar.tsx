@@ -154,18 +154,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>Scénarios de Recette (S1-S7)</span>
           </Link>
 
-          <Link
-            href="/audit"
-            onClick={() => onClose?.()}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-              isAuditActive
-                ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
-                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
-            }`}
-          >
-            <Activity className="w-4 h-4 shrink-0" />
-            <span>{t('nav.auditTrail')}</span>
-          </Link>
+          {(user.role === Role.CONSEILLER ||
+            user.role === Role.SUPERVISEUR ||
+            user.role === Role.ADMIN) && (
+            <Link
+              href="/audit"
+              onClick={() => onClose?.()}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
+                isAuditActive
+                  ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-brand-400/30'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              <Activity className="w-4 h-4 shrink-0" />
+              <span>{t('nav.auditTrail')}</span>
+            </Link>
+          )}
         </div>
       </nav>
 
