@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   ActivationStatus,
   LimitRequestStatus,
@@ -22,6 +23,7 @@ export class BankingSimulatorService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
+    private notificationsService: NotificationsService,
   ) {
     const envMode = process.env.SIMULATE_FAILURE as SimulationFailureMode;
     if (envMode && Object.values(SimulationFailureMode).includes(envMode)) {
@@ -247,15 +249,11 @@ export class BankingSimulatorService {
     });
 
     if (request.customerProfile?.userId) {
-      await this.prisma.notification.create({
-        data: {
-          userId: request.customerProfile.userId,
-          type: 'LIMIT_ACTIVATED',
-          title: `Plafond temporaire activé — ${request.reference}`,
-          message: `Votre plafond de virement de ${Number(request.requestedLimit).toLocaleString('fr-FR')} DH est maintenant actif jusqu'au ${expiry.toLocaleDateString('fr-FR')}.`,
-          link: `/requests?ref=${request.reference}`,
-          metadata: { reference: request.reference, limitApplied: Number(request.requestedLimit), activeUntil: expiry.toISOString() },
-        },
+      await this.notificationsService.notifyLimitActivated({
+        clientUserId: request.customerProfile.userId,
+        reference: request.reference,
+        limitApplied: Number(request.requestedLimit),
+        activeUntil: expiry,
       });
     }
 
@@ -317,15 +315,10 @@ export class BankingSimulatorService {
     });
 
     if (request.customerProfile?.userId) {
-      await this.prisma.notification.create({
-        data: {
-          userId: request.customerProfile.userId,
-          type: 'LIMIT_RESTORED',
-          title: `Plafond standard rétabli — ${request.reference}`,
-          message: `La période temporaire du dossier ${request.reference} est expirée. Votre plafond habituel de ${Number(request.account.initialTransferLimit)} DH a été rétabli.`,
-          link: `/requests?ref=${request.reference}`,
-          metadata: { reference: request.reference, restoredLimit: Number(request.account.initialTransferLimit) },
-        },
+      await this.notificationsService.notifyLimitRestored({
+        clientUserId: request.customerProfile.userId,
+        reference: request.reference,
+        restoredLimit: Number(request.account.initialTransferLimit),
       });
     }
 

@@ -367,6 +367,14 @@ export const api = {
   },
 
   // Notifications
+  getNotificationStreamUrl(): string {
+    const token = getToken();
+    const query = new URLSearchParams();
+    if (token) query.set('token', token);
+    const queryString = query.toString();
+    return `${API_BASE_URL}/notifications/stream${queryString ? `?${queryString}` : ''}`;
+  },
+
   async getNotifications(limit = 50) {
     return request<NotificationItem[]>(`/notifications?limit=${limit}`);
   },

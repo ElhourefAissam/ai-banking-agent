@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTranslation } from '@/i18n';
-import { api } from '@/lib/api';
+import { useRealtimeNotifications } from './realtime-notifications-context';
 import { NotificationItem, NotificationType } from '@proorga/shared-types';
 import {
   Bell,
@@ -18,8 +18,7 @@ import {
   XCircle,
   ShieldAlert,
   ChevronRight,
-  ExternalLink,
-  Sparkles,
+  Radio,
 } from 'lucide-react';
 
 export const NotificationCenter: React.FC = () => {
@@ -27,50 +26,26 @@ export const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
   const { t, formatDate } = useTranslation();
 
+  const {
+    unreadCount,
+    notifications,
+    isConnected,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    refreshNotifications,
+  } = useRealtimeNotifications();
+
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'UNREAD'>('ALL');
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Poll unread count periodically (every 15s) and on user change
-  const refreshUnreadCount = async () => {
-    if (!user) return;
-    try {
-      const res = await api.getUnreadNotificationCount();
-      setUnreadCount(res.unreadCount);
-    } catch {
-      // Ignore background poll errors
-    }
-  };
-
-  const loadNotifications = async () => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
-      const list = await api.getNotifications(40);
-      setNotifications(list);
-      setUnreadCount(list.filter((n) => !n.read).length);
-    } catch (err) {
-      console.warn('Failed to load notifications:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshUnreadCount();
-    const interval = setInterval(refreshUnreadCount, 15000);
-    return () => clearInterval(interval);
-  }, [user?.id]);
-
   useEffect(() => {
     if (isOpen) {
-      loadNotifications();
+      refreshNotifications();
     }
-  }, [isOpen]);
+  }, [isOpen, refreshNotifications]);
 
   // Click outside listener to close dropdown
   useEffect(() => {
@@ -90,33 +65,10 @@ export const NotificationCenter: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleMarkAllRead = async () => {
-    try {
-      await api.markAllNotificationsAsRead();
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() }))
-      );
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-    }
-  };
-
   const handleNotificationClick = async (notif: NotificationItem) => {
-    // 1. Mark as read if not already read
     if (!notif.read) {
-      try {
-        await api.markNotificationAsRead(notif.id);
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-        );
-        setUnreadCount((c) => Math.max(0, c - 1));
-      } catch (err) {
-        console.error('Failed to mark read:', err);
-      }
+      await markAsRead(notif.id);
     }
-
-    // 2. Navigate to link if provided
     if (notif.link) {
       setIsOpen(false);
       router.push(notif.link);
@@ -195,9 +147,25 @@ export const NotificationCenter: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-[0.98] transition-all focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
         aria-label="Centre de notifications bancaires"
-        title="Centre de notifications"
+        title={isConnected ? 'Centre de notifications (Live SSE connecté)' : 'Centre de notifications'}
       >
         <Bell className="w-4 h-4" />
+        
+        {/* Live SSE Zero-Polling Status Dot */}
+        {isConnected ? (
+          <span
+            className="absolute bottom-1 end-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"
+            title="Temps Réel Actif (SSE Zero-Polling)"
+          >
+            <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
+          </span>
+        ) : (
+          <span
+            className="absolute bottom-1 end-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-white"
+            title="Connexion en cours..."
+          />
+        )}
+
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -end-0.5 px-1.5 py-0.2 min-w-[18px] text-[10px] font-bold text-white bg-rose-600 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in-50 duration-200">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -216,13 +184,26 @@ export const NotificationCenter: React.FC = () => {
                   <Bell className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">
-                    {t('notifications.title')}
-                  </h3>
-                  <span className="text-[10px] text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-bold text-slate-900 text-sm">
+                      {t('notifications.title')}
+                    </h3>
+                    {isConnected ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Live SSE
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                        Connexion...
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-500 block">
                     {unreadCount > 0
                       ? `${unreadCount} ${t('notifications.unreadBadge')}`
-                      : 'À jour'}
+                      : 'À jour (Zero-Polling)'}
                   </span>
                 </div>
               </div>
@@ -230,7 +211,7 @@ export const NotificationCenter: React.FC = () => {
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={handleMarkAllRead}
+                  onClick={markAllAsRead}
                   className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-brand-700 hover:text-brand-900 hover:bg-brand-50 rounded-lg transition-colors cursor-pointer"
                   title="Tout marquer comme lu"
                 >

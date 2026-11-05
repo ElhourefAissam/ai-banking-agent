@@ -1,12 +1,64 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationType, Role, NotificationItem } from '@proorga/shared-types';
+import { Subject, Observable, merge, interval, defer } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+export interface NotificationStreamEvent {
+  userId: string;
+  type: 'NOTIFICATION' | 'UNREAD_COUNT';
+  notification?: NotificationItem;
+  unreadCount: number;
+}
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
+  private readonly notificationStream$ = new Subject<NotificationStreamEvent>();
 
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * Return a real-time reactive SSE stream for a specific authenticated user.
+   */
+  getUserStream(userId: string): Observable<{ data: any }> {
+    // 1. Send current unread count immediately upon connection
+    const initial$ = defer(async () => {
+      const unreadCount = await this.getUnreadCount(userId);
+      return {
+        data: {
+          type: 'INITIAL_STATE',
+          unreadCount,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    });
+
+    // 2. Stream domain events tailored to this user
+    const userEvents$ = this.notificationStream$.pipe(
+      filter((evt) => evt.userId === userId),
+      map((evt) => ({
+        data: {
+          type: evt.type,
+          notification: evt.notification,
+          unreadCount: evt.unreadCount,
+          timestamp: new Date().toISOString(),
+        },
+      }))
+    );
+
+    // 3. Keep-alive heartbeat every 20s to ensure zero connection drops
+    const heartbeat$ = interval(20000).pipe(
+      map(() => ({
+        data: {
+          type: 'HEARTBEAT',
+          timestamp: new Date().toISOString(),
+        },
+      }))
+    );
+
+    return merge(initial$, userEvents$, heartbeat$);
+  }
 
   async createNotification(data: {
     userId: string;
@@ -27,7 +79,7 @@ export class NotificationsService {
       },
     });
 
-    return {
+    const mapped: NotificationItem = {
       id: notification.id,
       userId: notification.userId,
       type: notification.type as NotificationType,
@@ -39,6 +91,21 @@ export class NotificationsService {
       createdAt: notification.createdAt.toISOString(),
       readAt: notification.readAt?.toISOString() || null,
     };
+
+    // Calculate updated unread count and push real-time SSE event (Zero Polling)
+    try {
+      const unreadCount = await this.getUnreadCount(data.userId);
+      this.notificationStream$.next({
+        userId: data.userId,
+        type: 'NOTIFICATION',
+        notification: mapped,
+        unreadCount,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to dispatch real-time notification to stream: ${err}`);
+    }
+
+    return mapped;
   }
 
   async getNotificationsForUser(userId: string, limit = 50): Promise<NotificationItem[]> {
@@ -88,7 +155,7 @@ export class NotificationsService {
       },
     });
 
-    return {
+    const mappedResult: NotificationItem = {
       id: updated.id,
       userId: updated.userId,
       type: updated.type as NotificationType,
@@ -100,6 +167,19 @@ export class NotificationsService {
       createdAt: updated.createdAt.toISOString(),
       readAt: updated.readAt?.toISOString() || null,
     };
+
+    try {
+      const unreadCount = await this.getUnreadCount(userId);
+      this.notificationStream$.next({
+        userId,
+        type: 'UNREAD_COUNT',
+        unreadCount,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to push unread count update: ${err}`);
+    }
+
+    return mappedResult;
   }
 
   async markAllAsRead(userId: string): Promise<{ count: number }> {
@@ -110,6 +190,16 @@ export class NotificationsService {
         readAt: new Date(),
       },
     });
+
+    try {
+      this.notificationStream$.next({
+        userId,
+        type: 'UNREAD_COUNT',
+        unreadCount: 0,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to push unread count update: ${err}`);
+    }
 
     return { count: res.count };
   }

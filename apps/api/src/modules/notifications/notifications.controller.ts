@@ -6,7 +6,9 @@ import {
   Param,
   Query,
   UseGuards,
+  Sse,
 } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -16,6 +18,16 @@ import { UserSummary } from '@proorga/shared-types';
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
+
+  /**
+   * Real-Time Server-Sent Events (SSE) Stream for Zero-Polling Notifications.
+   */
+  @Sse('stream')
+  streamNotifications(
+    @CurrentUser() user: UserSummary,
+  ): Observable<{ data: any }> {
+    return this.notificationsService.getUserStream(user.id);
+  }
 
   @Get()
   async getMyNotifications(
