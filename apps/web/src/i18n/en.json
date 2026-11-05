@@ -182,5 +182,32 @@
     "empty": "No notifications at the moment.",
     "emptyUnread": "All your notifications are read!",
     "unreadBadge": "unread"
+  },
+  "attestation": {
+    "cardTitle": "Official Bank Certificate with QR",
+    "cardBadge": "Certified Document",
+    "cardDesc": "Official A4 bank certificate digitally sealed with an instant verification QR code for third parties (dealers, notaries, vendors).",
+    "viewBtn": "View Certificate",
+    "downloadBtn": "Download (PDF)",
+    "verifyLink": "Test verification page",
+    "portalTitle": "Official Certificate Authentication Portal",
+    "portalSubtitle": "Instant verification system for official PROORGA BANK limit increase certificates.",
+    "searchPlaceholder": "e.g. REQ-2026-0001",
+    "verifyBtn": "Verify",
+    "verifying": "Verifying against secure bank registry...",
+    "validTitle": "Authentic & Valid Certificate",
+    "validSubtitle": "This document was formally issued and certified by PROORGA BANK SA under Bank Al-Maghrib supervision.",
+    "invalidTitle": "Unrecognized or Invalid Certificate",
+    "invalidSubtitle": "No active or approved limit increase matches this reference in our banking registry.",
+    "reference": "Reference Number",
+    "holder": "Account Holder",
+    "account": "Account Number",
+    "grantedLimit": "Granted Temporary Limit",
+    "initialLimit": "Standard Initial Limit",
+    "validityPeriod": "Validity Period",
+    "certifiedAt": "Certification Timestamp",
+    "status": "Certificate Status",
+    "tamperNotice": "Certified authentic and tamper-evident via SHA-256 cryptographic seal (Law 53-05).",
+    "backHome": "Back to Platform"
   }
 }

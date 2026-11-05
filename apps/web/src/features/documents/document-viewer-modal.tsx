@@ -23,6 +23,9 @@ interface DocumentViewerModalProps {
     fileType?: string;
     fileSize: number;
     createdAt?: string;
+    customUrl?: string;
+    onDownload?: () => Promise<void>;
+    subtitle?: string;
   } | null;
   isOpen: boolean;
   onClose: () => void;
@@ -38,7 +41,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
 
   if (!doc) return null;
 
-  const fileUrl = api.getDocumentFileUrl(doc.id, false);
+  const fileUrl = doc.customUrl || api.getDocumentFileUrl(doc.id, false);
   const isPdf =
     doc.fileType === 'application/pdf' || doc.fileName.toLowerCase().endsWith('.pdf');
   const isImage =
@@ -48,13 +51,17 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      await api.downloadDocument(doc.id, doc.fileName);
+      if (doc.onDownload) {
+        await doc.onDownload();
+      } else {
+        await api.downloadDocument(doc.id, doc.fileName);
+      }
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 3000);
     } catch (err) {
       console.error('Download error:', err);
       // Fallback: direct window download via query token
-      window.open(api.getDocumentFileUrl(doc.id, true), '_blank');
+      window.open(doc.customUrl || api.getDocumentFileUrl(doc.id, true), '_blank');
     } finally {
       setIsDownloading(false);
     }

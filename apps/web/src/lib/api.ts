@@ -253,6 +253,66 @@ export const api = {
     }, 100);
   },
 
+  // Official Certificate PDF & Verification
+  getCertificateUrl(requestId: string, download = false): string {
+    const token = getToken();
+    const query = new URLSearchParams();
+    if (token) query.set('token', token);
+    if (download) query.set('download', 'true');
+    const queryString = query.toString();
+    return `${API_BASE_URL}/requests/${requestId}/certificate${queryString ? `?${queryString}` : ''}`;
+  },
+
+  async downloadCertificate(requestId: string, fallbackFileName = 'attestation_officielle_plafond.pdf') {
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE_URL}/requests/${requestId}/certificate?download=true`, {
+      headers,
+    });
+
+    if (!res.ok) {
+      let errMsg = `Échec du téléchargement (${res.status})`;
+      try {
+        const errJson = await res.json();
+        if (errJson.message) errMsg = errJson.message;
+      } catch {}
+      throw new Error(errMsg);
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fallbackFileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 100);
+  },
+
+  async verifyCertificate(reference: string, hash?: string) {
+    const query = new URLSearchParams({ ref: reference });
+    if (hash) query.set('hash', hash);
+    return request<{
+      isValid: boolean;
+      message?: string;
+      reference?: string;
+      status?: string;
+      holderMaskedName?: string;
+      accountMasked?: string;
+      requestedLimit?: number;
+      initialLimit?: number;
+      durationDays?: number;
+      activeFrom?: string | null;
+      activeUntil?: string | null;
+      certifiedAt?: string;
+    }>(`/requests/verify-certificate?${query.toString()}`);
+  },
+
   // AI Assistant
   async sendAiMessage(message: string, conversationId?: string) {
     return request<ChatMessage>('/ai/chat', {

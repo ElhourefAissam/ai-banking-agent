@@ -34,6 +34,8 @@ import {
   Eye,
   Download,
   ExternalLink,
+  QrCode,
+  FileCheck,
 } from 'lucide-react';
 import { DocumentViewerModal } from '@/features/documents/document-viewer-modal';
 
@@ -67,6 +69,35 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
   const [actionError, setActionError] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<any | null>(null);
+  const [isDownloadingCert, setIsDownloadingCert] = useState(false);
+
+  const handleDownloadCertificate = async () => {
+    if (!request) return;
+    setIsDownloadingCert(true);
+    try {
+      await api.downloadCertificate(
+        request.id,
+        `Attestation_Plafond_${request.reference}.pdf`
+      );
+    } catch (err: any) {
+      console.error('Certificate download error:', err);
+      window.open(api.getCertificateUrl(request.id, true), '_blank');
+    } finally {
+      setIsDownloadingCert(false);
+    }
+  };
+
+  const handleViewCertificate = () => {
+    if (!request) return;
+    setViewingDocument({
+      id: `cert-${request.id}`,
+      fileName: `Attestation_Plafond_${request.reference}.pdf`,
+      fileType: 'application/pdf',
+      fileSize: 48000,
+      customUrl: api.getCertificateUrl(request.id, false),
+      onDownload: handleDownloadCertificate,
+    });
+  };
 
   // Decision Modal State (if Advisor or Supervisor acts directly from the drawer)
   const [decisionModalMode, setDecisionModalMode] = useState<
@@ -229,6 +260,12 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
     (request.status === 'SUBMITTED' || request.status === 'UNDER_REVIEW');
   const isPendingSupervisorAction =
     isSupervisor && request && request.status === 'PENDING_SUPERVISOR';
+
+  const isCertificateAvailable =
+    request &&
+    (request.status === LimitRequestStatus.ACTIVE ||
+      request.status === LimitRequestStatus.APPROVED_PENDING_ACTIVATION ||
+      request.status === LimitRequestStatus.EXPIRED);
 
   const totalHistoryCount =
     (request?.decisions?.length || 0) +
@@ -404,6 +441,70 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
                       <span className="font-mono text-slate-600">
                         CIN : {request.customerProfile.cin}
                       </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* OFFICIAL BANK CERTIFICATE CARD (If ACTIVE, APPROVED_PENDING_ACTIVATION, or EXPIRED) */}
+                {isCertificateAvailable && (
+                  <div className="relative overflow-hidden rounded-2xl border border-emerald-300/80 bg-gradient-to-br from-emerald-50/90 via-white to-slate-50 p-4 shadow-2xs space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                          <FileCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-sm text-slate-900">
+                              {t('attestation.cardTitle') || 'Attestation Officielle avec QR'}
+                            </h4>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              <ShieldCheck className="w-3 h-3" />
+                              {t('attestation.cardBadge') || 'Document Certifié'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                            {t('attestation.cardDesc') ||
+                              'Attestation bancaire officielle A4 scellée numériquement avec QR code de vérification instantané pour tiers et commerçants.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-100">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="primary"
+                        onClick={handleViewCertificate}
+                        className="text-xs"
+                      >
+                        <Eye className="w-3.5 h-3.5 me-1.5" />
+                        <span>{t('attestation.viewBtn') || "Visualiser l'Attestation"}</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleDownloadCertificate}
+                        isLoading={isDownloadingCert}
+                        className="text-xs bg-white hover:bg-slate-50"
+                      >
+                        <Download className="w-3.5 h-3.5 me-1.5 text-emerald-700" />
+                        <span>{t('attestation.downloadBtn') || 'Télécharger (PDF)'}</span>
+                      </Button>
+
+                      <a
+                        href={`/verify?ref=${encodeURIComponent(request.reference)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-brand-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                        <span>{t('attestation.verifyLink') || 'Tester la page de vérification'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
                   </div>
                 )}

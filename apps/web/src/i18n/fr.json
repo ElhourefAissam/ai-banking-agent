@@ -182,5 +182,32 @@
     "empty": "Aucune notification pour le moment.",
     "emptyUnread": "Toutes vos notifications sont lues !",
     "unreadBadge": "non lue(s)"
+  },
+  "attestation": {
+    "cardTitle": "Attestation Officielle avec QR",
+    "cardBadge": "Document Certifié",
+    "cardDesc": "Attestation bancaire officielle au format A4 scellée numériquement avec QR code de vérification instantané pour tiers (concessionnaires, notaires, fournisseurs).",
+    "viewBtn": "Visualiser l'Attestation",
+    "downloadBtn": "Télécharger (PDF)",
+    "verifyLink": "Tester la page de vérification",
+    "portalTitle": "Portail Public d'Authentification des Attestations Bancaires",
+    "portalSubtitle": "Système de contrôle d'authenticité et de vérification des certificats de relèvement de plafond PROORGA BANK.",
+    "searchPlaceholder": "Ex: REQ-2026-0001",
+    "verifyBtn": "Vérifier",
+    "verifying": "Vérification en cours auprès du registre sécurisé...",
+    "validTitle": "Attestation Authentique & Valide",
+    "validSubtitle": "Ce document a été formellement émis et certifié par PROORGA BANK SA sous contrôle de Bank Al-Maghrib.",
+    "invalidTitle": "Attestation Non Reconnue ou Non Valide",
+    "invalidSubtitle": "Aucun relèvement temporaire de plafond actif ou approuvé ne correspond à cette référence.",
+    "reference": "Référence Dossier",
+    "holder": "Titulaire du Compte",
+    "account": "Numéro de Compte",
+    "grantedLimit": "Nouveau Plafond Accordé",
+    "initialLimit": "Plafond Initial de Base",
+    "validityPeriod": "Période de Validité",
+    "certifiedAt": "Horodatage de Certification",
+    "status": "Statut de l'Attestation",
+    "tamperNotice": "Certifié conforme et inviolable par empreinte cryptographique SHA-256 (Loi 53-05).",
+    "backHome": "Retour à la plateforme"
   }
 }

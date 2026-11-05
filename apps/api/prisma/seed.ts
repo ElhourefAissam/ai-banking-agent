@@ -201,6 +201,62 @@ async function main() {
   console.log('✅ Accounts created.');
 
   // 5. Create Pre-existing Seed Requests
+  // Request 1: Active request for Client 1 (25,000 DH), approved by Advisor 1, active for 3 days
+  const now = new Date();
+  const activeFrom = new Date(now.getTime() - 3600 * 1000 * 3);
+  const activeUntil = new Date(now.getTime() + 3600 * 1000 * 24 * 3);
+
+  const reqActive = await prisma.limitRequest.create({
+    data: {
+      id: 'req-active-25k',
+      reference: 'REQ-2026-0001',
+      accountId: account1.id,
+      customerProfileId: profile1.id,
+      initialLimit: 10000.0,
+      requestedLimit: 25000.0,
+      durationDays: 3,
+      reason: 'Achat équipements informatiques et mobilier de bureau professionnel',
+      status: LimitRequestStatus.ACTIVE,
+      version: 2,
+      assignedAdvisorId: advisor1User.id,
+      requiredDocumentsProvided: true,
+      activeFrom,
+      activeUntil,
+      createdAt: new Date(now.getTime() - 3600 * 1000 * 24),
+    },
+  });
+
+  await prisma.decision.create({
+    data: {
+      requestId: reqActive.id,
+      decisionType: DecisionType.APPROVE,
+      motive: 'Client historique sans incident bancaire. Solde suffisant pour couvrir le plafond demandé.',
+      targetVersion: 1,
+      actorId: advisor1User.id,
+      actorRole: Role.CONSEILLER,
+      createdAt: new Date(now.getTime() - 3600 * 1000 * 4),
+    },
+  });
+
+  await prisma.bankingActivation.create({
+    data: {
+      requestId: reqActive.id,
+      idempotencyKey: 'seed-activation-req-2026-0001',
+      attemptNumber: 1,
+      status: ActivationStatus.SUCCESS,
+      limitApplied: 25000.0,
+      activatedAt: activeFrom,
+    },
+  });
+
+  await prisma.account.update({
+    where: { id: account1.id },
+    data: {
+      currentTransferLimit: 25000.0,
+      activeLimitExpiry: activeUntil,
+    },
+  });
+
   // Request A: An escalated request for Client 2 (65,000 DH), recommended by Advisor 1, awaiting Supervisor decision
   const reqEscalated = await prisma.limitRequest.create({
     data: {

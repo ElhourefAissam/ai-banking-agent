@@ -7,11 +7,15 @@ import {
   Body,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { RequestsService } from './requests.service';
+import { CertificateService } from './certificate.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import {
   Role,
@@ -27,7 +31,39 @@ import {
 @Controller('requests')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RequestsController {
-  constructor(private readonly requestsService: RequestsService) {}
+  constructor(
+    private readonly requestsService: RequestsService,
+    private readonly certificateService: CertificateService,
+  ) {}
+
+  @Get('verify-certificate')
+  @Public()
+  async verifyCertificate(
+    @Query('ref') reference: string,
+    @Query('hash') hash?: string,
+  ) {
+    return this.certificateService.verifyCertificate(reference, hash);
+  }
+
+  @Get(':id/certificate')
+  @Roles(Role.CLIENT, Role.CONSEILLER, Role.SUPERVISEUR, Role.ADMIN)
+  async getCertificate(
+    @Param('id') id: string,
+    @CurrentUser() user: UserSummary,
+    @Query('download') download: string,
+    @Res() res: Response,
+  ) {
+    const { buffer, fileName } =
+      await this.certificateService.generateCertificatePdf(id, user);
+    const disposition = download === 'true' ? 'attachment' : 'inline';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `${disposition}; filename="${fileName}"`,
+    );
+    res.setHeader('Content-Length', buffer.length);
+    res.end(buffer);
+  }
 
   @Get('my-requests')
   @Roles(Role.CLIENT, Role.ADMIN)
