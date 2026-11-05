@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { Role, UserSummary, CustomerFileStatus } from '@proorga/shared-types';
 import { createHash } from 'crypto';
 import * as fs from 'fs';
@@ -20,6 +21,7 @@ export class DocumentsService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
+    private notificationsService: NotificationsService,
   ) {
     if (!fs.existsSync(this.uploadDir)) {
       fs.mkdirSync(this.uploadDir, { recursive: true });
@@ -119,6 +121,14 @@ export class DocumentsService {
         fileSize: file.size,
         checksum,
       },
+    });
+
+    // Broadcast real-time update to update open drawers and documents list
+    this.notificationsService.broadcastRequestUpdate({
+      requestId: request.id,
+      reference: request.reference,
+      status: request.status,
+      action: 'DOCUMENT_UPLOADED',
     });
 
     return {

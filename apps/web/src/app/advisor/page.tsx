@@ -6,11 +6,13 @@ import { AdvisorWorkspace } from '@/features/advisor/advisor-workspace';
 import { RequestDetailsDrawer } from '@/features/client/request-details-drawer';
 import { useRequestDrawer } from '@/hooks/use-request-drawer';
 import { useAuth } from '@/features/auth/auth-context';
+import { useRealtimeNotifications } from '@/features/notifications/realtime-notifications-context';
 import { api } from '@/lib/api';
 import { LimitRequestDetail } from '@proorga/shared-types';
 
 export default function AdvisorPage() {
   const { user } = useAuth();
+  const { lastUpdatedRequest } = useRealtimeNotifications();
   const [requests, setRequests] = useState<LimitRequestDetail[]>([]);
   const { requestRef, openRequest, closeRequest, isOpen } = useRequestDrawer();
 
@@ -28,6 +30,13 @@ export default function AdvisorPage() {
       loadData();
     }
   }, [user?.email, user?.role]);
+
+  // Real-time automatic updates (Zero-Refresh / Zero-Polling)
+  useEffect(() => {
+    if (user && lastUpdatedRequest) {
+      loadData();
+    }
+  }, [lastUpdatedRequest?.timestamp]);
 
   return (
     <WorkspaceLayout>

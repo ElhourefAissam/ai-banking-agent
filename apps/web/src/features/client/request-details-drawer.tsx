@@ -38,6 +38,7 @@ import {
   FileCheck,
 } from 'lucide-react';
 import { DocumentViewerModal } from '@/features/documents/document-viewer-modal';
+import { useRealtimeNotifications } from '@/features/notifications/realtime-notifications-context';
 
 interface RequestDetailsDrawerProps {
   requestId?: string | null;
@@ -113,6 +114,8 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
     }
   }, [initialData]);
 
+  const { lastUpdatedRequest } = useRealtimeNotifications();
+
   useEffect(() => {
     if (
       isOpen &&
@@ -123,20 +126,44 @@ export const RequestDetailsDrawer: React.FC<RequestDetailsDrawerProps> = ({
     }
   }, [isOpen, requestId]);
 
-  const loadRequest = async (id: string) => {
-    setIsLoading(true);
+  const loadRequest = async (id: string, silent = false) => {
+    if (!silent) setIsLoading(true);
     setFetchError(null);
     try {
       const data = await api.getRequestById(id);
       setRequest(data);
     } catch (err: any) {
-      setFetchError(
-        err.message || 'Impossible de charger ce dossier. Vérifiez vos autorisations bancaires.'
-      );
+      if (!silent) {
+        setFetchError(
+          err.message || 'Impossible de charger ce dossier. Vérifiez vos autorisations bancaires.'
+        );
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
+
+  // Zero-Polling / Zero-Refresh: Auto-update drawer content in real-time when any change occurs
+  useEffect(() => {
+    if (!isOpen || !lastUpdatedRequest) return;
+
+    const matches =
+      (request?.id && lastUpdatedRequest.requestId === request.id) ||
+      (request?.reference && lastUpdatedRequest.reference === request.reference) ||
+      (requestId &&
+        (lastUpdatedRequest.requestId === requestId ||
+          lastUpdatedRequest.reference === requestId));
+
+    if (matches) {
+      const targetId = request?.reference || request?.id || requestId;
+      if (targetId) {
+        loadRequest(targetId, true);
+        if (onRefresh) {
+          onRefresh();
+        }
+      }
+    }
+  }, [lastUpdatedRequest?.timestamp, isOpen]);
 
   const handleCopyLink = () => {
     if (typeof window !== 'undefined' && request) {

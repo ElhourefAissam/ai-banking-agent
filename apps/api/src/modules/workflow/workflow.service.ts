@@ -331,6 +331,7 @@ export class WorkflowService {
     await this.notificationsService.notifyRequestSubmitted({
       clientUserId: request.customerProfile.userId,
       reference: request.reference,
+      requestId: request.id,
       requestedLimit: amt,
       durationDays: request.durationDays,
       clientName: `${currentUser.firstName} ${currentUser.lastName}`,
@@ -426,6 +427,7 @@ export class WorkflowService {
     await this.notificationsService.notifyDocumentsRequired({
       clientUserId: request.customerProfile.userId,
       reference: request.reference,
+      requestId: request.id,
       motive: motive.trim(),
     });
 
@@ -515,6 +517,7 @@ export class WorkflowService {
     await this.notificationsService.notifyRequestSubmitted({
       clientUserId: request.customerProfile.userId,
       reference: request.reference,
+      requestId: request.id,
       requestedLimit: newAmt,
       durationDays: newDur,
       clientName: `${currentUser.firstName} ${currentUser.lastName}`,
@@ -610,6 +613,7 @@ export class WorkflowService {
     await this.notificationsService.notifySupervisorPending({
       clientUserId: request.customerProfile.userId,
       reference: request.reference,
+      requestId: request.id,
       requestedLimit: Number(request.requestedLimit),
       advisorName: `${currentUser.firstName} ${currentUser.lastName}`,
     });
@@ -743,8 +747,10 @@ export class WorkflowService {
     await this.notificationsService.notifyRequestApproved({
       clientUserId: request.customerProfile.userId,
       reference: request.reference,
+      requestId: request.id,
       requestedLimit: Number(request.requestedLimit),
       approverName: `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})`,
+      assignedAdvisorId: request.assignedAdvisorId,
     });
 
     // Automatically trigger banking simulator activation asynchronously
@@ -852,8 +858,10 @@ export class WorkflowService {
     await this.notificationsService.notifyRequestRejected({
       clientUserId: request.customerProfile.userId,
       reference: request.reference,
+      requestId: request.id,
       motive: motive.trim(),
       rejecterName: `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})`,
+      assignedAdvisorId: request.assignedAdvisorId,
     });
 
     return updated;
@@ -928,6 +936,14 @@ export class WorkflowService {
       entityType: 'LimitRequest',
       entityId: request.id,
       entityVersion: nextVersion,
+    });
+
+    await this.notificationsService.notifyRequestCancelled({
+      clientUserId: request.customerProfile.userId,
+      reference: request.reference,
+      requestId: request.id,
+      clientName: `${currentUser.firstName} ${currentUser.lastName}`,
+      assignedAdvisorId: request.assignedAdvisorId,
     });
 
     return updated;

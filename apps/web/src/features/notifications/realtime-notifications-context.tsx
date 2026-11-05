@@ -32,11 +32,21 @@ export interface ActiveToast {
   createdAt: number;
 }
 
+export interface RequestUpdateEvent {
+  requestId?: string;
+  reference?: string;
+  status?: string;
+  action?: string;
+  type?: string;
+  timestamp: number;
+}
+
 interface RealtimeNotificationsContextType {
   unreadCount: number;
   notifications: NotificationItem[];
   isConnected: boolean;
   isLoading: boolean;
+  lastUpdatedRequest: RequestUpdateEvent | null;
   refreshNotifications: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
@@ -58,6 +68,7 @@ export const RealtimeNotificationsProvider: React.FC<{
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [toasts, setToasts] = useState<ActiveToast[]>([]);
+  const [lastUpdatedRequest, setLastUpdatedRequest] = useState<RequestUpdateEvent | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -175,6 +186,18 @@ export const RealtimeNotificationsProvider: React.FC<{
             }
             break;
 
+          case 'REQUEST_UPDATED':
+            if (payload.requestUpdate) {
+              setLastUpdatedRequest({
+                requestId: payload.requestUpdate.requestId,
+                reference: payload.requestUpdate.reference,
+                status: payload.requestUpdate.status,
+                action: payload.requestUpdate.action,
+                timestamp: Date.now(),
+              });
+            }
+            break;
+
           case 'NOTIFICATION':
             if (payload.notification) {
               const newNotif = payload.notification as NotificationItem;
@@ -191,6 +214,16 @@ export const RealtimeNotificationsProvider: React.FC<{
               } else {
                 setUnreadCount((prev) => prev + 1);
               }
+
+              // Update lastUpdatedRequest if notification carries request metadata
+              setLastUpdatedRequest({
+                requestId: newNotif.metadata?.requestId,
+                reference: newNotif.metadata?.reference,
+                status: newNotif.metadata?.status,
+                action: newNotif.type,
+                type: newNotif.type,
+                timestamp: Date.now(),
+              });
 
               // Play gentle chime
               playNotificationChime();
@@ -243,6 +276,7 @@ export const RealtimeNotificationsProvider: React.FC<{
         notifications,
         isConnected,
         isLoading,
+        lastUpdatedRequest,
         refreshNotifications,
         markAsRead,
         markAllAsRead,
@@ -318,6 +352,32 @@ export const useRealtimeNotifications = () => {
     );
   }
   return ctx;
+};
+
+/**
+ * Hook to automatically synchronize request data whenever a server-side SSE event is emitted.
+ * Zero polling: reactive wakeup driven solely by Server-Sent Events.
+ */
+export const useRealtimeRequestSync = (
+  currentReferenceOrId?: string | null,
+  onUpdate?: () => void
+) => {
+  const { lastUpdatedRequest } = useRealtimeNotifications();
+
+  useEffect(() => {
+    if (!lastUpdatedRequest) return;
+    if (!currentReferenceOrId) {
+      onUpdate?.();
+      return;
+    }
+    const matches =
+      lastUpdatedRequest.reference === currentReferenceOrId ||
+      lastUpdatedRequest.requestId === currentReferenceOrId;
+
+    if (matches) {
+      onUpdate?.();
+    }
+  }, [lastUpdatedRequest?.timestamp]);
 };
 
 function getNotificationIcon(type: NotificationType) {

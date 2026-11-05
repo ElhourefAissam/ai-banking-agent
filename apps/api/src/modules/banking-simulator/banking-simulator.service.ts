@@ -252,6 +252,7 @@ export class BankingSimulatorService {
       await this.notificationsService.notifyLimitActivated({
         clientUserId: request.customerProfile.userId,
         reference: request.reference,
+        requestId: request.id,
         limitApplied: Number(request.requestedLimit),
         activeUntil: expiry,
       });
@@ -318,6 +319,7 @@ export class BankingSimulatorService {
       await this.notificationsService.notifyLimitRestored({
         clientUserId: request.customerProfile.userId,
         reference: request.reference,
+        requestId: request.id,
         restoredLimit: Number(request.account.initialTransferLimit),
       });
     }

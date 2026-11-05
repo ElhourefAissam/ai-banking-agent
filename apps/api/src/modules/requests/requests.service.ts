@@ -252,6 +252,7 @@ export class RequestsService {
       await this.notificationsService.notifyAdvisorReviewing({
         clientUserId: request.customerProfile.userId,
         reference: request.reference,
+        requestId: request.id,
         advisorName: `${currentUser.firstName} ${currentUser.lastName}`,
       });
     }

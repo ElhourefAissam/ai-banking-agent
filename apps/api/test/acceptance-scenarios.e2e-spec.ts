@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/modules/prisma/prisma.service';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
-import { SimulationFailureMode, LimitRequestStatus } from '@proorga/shared-types';
+import { SimulationFailureMode, LimitRequestStatus, CustomerFileStatus } from '@proorga/shared-types';
 
 describe('PROORGA — 7 Official Technical Assignment Acceptance Scenarios', () => {
   let app: INestApplication;
@@ -53,6 +53,13 @@ describe('PROORGA — 7 Official Technical Assignment Acceptance Scenarios', () 
     await prisma.account.updateMany({
       where: { id: { not: 'ac222222-2222-2222-2222-222222222222' } },
       data: { currentTransferLimit: 10000, activeLimitExpiry: null },
+    });
+    await prisma.customerProfile.updateMany({
+      where: { id: 'cp333333-3333-3333-3333-333333333333' },
+      data: {
+        fileStatus: CustomerFileStatus.INCOMPLETE,
+        incompleteReason: 'Justificatif de domicile de moins de 3 mois et renouvellement CIN manquants.',
+      },
     });
 
     // Authenticate users

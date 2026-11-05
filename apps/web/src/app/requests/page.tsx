@@ -7,12 +7,14 @@ import { MyRequestsView } from '@/features/client/my-requests-view';
 import { RequestDetailsDrawer } from '@/features/client/request-details-drawer';
 import { useRequestDrawer } from '@/hooks/use-request-drawer';
 import { useAuth } from '@/features/auth/auth-context';
+import { useRealtimeNotifications } from '@/features/notifications/realtime-notifications-context';
 import { api } from '@/lib/api';
 import { LimitRequestDetail } from '@proorga/shared-types';
 
 export default function RequestsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { lastUpdatedRequest } = useRealtimeNotifications();
   const [requests, setRequests] = useState<LimitRequestDetail[]>([]);
   const { requestRef, openRequest, closeRequest, isOpen } = useRequestDrawer();
 
@@ -30,6 +32,13 @@ export default function RequestsPage() {
       loadData();
     }
   }, [user?.email]);
+
+  // Real-time automatic updates (Zero-Refresh / Zero-Polling)
+  useEffect(() => {
+    if (user && lastUpdatedRequest) {
+      loadData();
+    }
+  }, [lastUpdatedRequest?.timestamp]);
 
   return (
     <WorkspaceLayout>

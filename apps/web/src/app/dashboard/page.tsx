@@ -7,12 +7,14 @@ import { ClientDashboard } from '@/features/client/client-dashboard';
 import { RequestDetailsDrawer } from '@/features/client/request-details-drawer';
 import { useRequestDrawer } from '@/hooks/use-request-drawer';
 import { useAuth } from '@/features/auth/auth-context';
+import { useRealtimeNotifications } from '@/features/notifications/realtime-notifications-context';
 import { api } from '@/lib/api';
 import { BankAccountSummary, LimitRequestDetail, Role } from '@proorga/shared-types';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { lastUpdatedRequest } = useRealtimeNotifications();
 
   const [accounts, setAccounts] = useState<BankAccountSummary[]>([]);
   const [requests, setRequests] = useState<LimitRequestDetail[]>([]);
@@ -52,6 +54,13 @@ export default function DashboardPage() {
       loadData();
     }
   }, [user?.email, user?.role]);
+
+  // Real-time automatic updates (Zero-Refresh / Zero-Polling)
+  useEffect(() => {
+    if (user && lastUpdatedRequest) {
+      loadData();
+    }
+  }, [lastUpdatedRequest?.timestamp]);
 
   return (
     <WorkspaceLayout>
