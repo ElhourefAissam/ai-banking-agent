@@ -2,8 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   CustomerFileStatus,
   Role,
@@ -212,5 +215,58 @@ export class CustomersService {
     });
 
     return updated;
+  }
+
+  async uploadKycDocument(userId: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Fichier manquant');
+    }
+
+    const profile = await this.prisma.customerProfile.findUnique({
+      where: { userId },
+      include: { user: true },
+    });
+
+    if (!profile) {
+      throw new NotFoundException('Customer profile not found');
+    }
+
+    const uploadDir = process.env.UPLOAD_DIR || './uploads';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const ext = path.extname(file.originalname) || '.pdf';
+    const filename = `kyc_${userId}_${Date.now()}${ext}`;
+    fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+
+    const updated = await this.prisma.customerProfile.update({
+      where: { userId },
+      data: {
+        fileStatus: CustomerFileStatus.COMPLETE,
+        incompleteReason: null,
+      },
+    });
+
+    await this.prisma.auditEvent.create({
+      data: {
+        actorId: userId,
+        actorEmail: profile.user?.email || '',
+        actorRole: Role.CLIENT,
+        action: 'KYC_DOCUMENT_REGULARIZED',
+        entityType: 'CustomerProfile',
+        entityId: profile.id,
+        details: {
+          fileName: file.originalname,
+          fileSize: file.size,
+        },
+      },
+    });
+
+    return {
+      success: true,
+      fileStatus: CustomerFileStatus.COMPLETE,
+      message:
+        'Votre justificatif a été enregistré avec succès et votre dossier est désormais complet.',
+    };
   }
 }

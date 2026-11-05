@@ -3,10 +3,14 @@ import {
   Get,
   Put,
   Patch,
+  Post,
   Body,
   Param,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CustomersService } from './customers.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -35,6 +39,15 @@ export class CustomersController {
     @Body() dto: UpdateProfileInput,
   ) {
     return this.customersService.updateMyProfile(user.id, dto);
+  }
+
+  @Post('me/upload-kyc')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadKycDocument(
+    @CurrentUser() user: UserSummary,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.customersService.uploadKycDocument(user.id, file);
   }
 
   @Get(':id')

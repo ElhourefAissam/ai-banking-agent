@@ -16,6 +16,12 @@ import {
   AlertCircle,
   Clock,
   ArrowRight,
+  Upload,
+  Paperclip,
+  FileText,
+  X,
+  AlertTriangle,
+  FileCheck,
 } from 'lucide-react';
 
 interface AiChatDrawerProps {
@@ -30,6 +36,12 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittingFromAi, setIsSubmittingFromAi] = useState(false);
   const [submissionFeedback, setSubmissionFeedback] = useState<string | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<Record<string, File>>({});
+  const [pendingDraftToRetry, setPendingDraftToRetry] = useState<{
+    requestId: string;
+    targetVersion: number;
+    requestedLimit: number;
+  } | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -84,27 +96,49 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
   const handleConfirmAiDraft = async (params: {
     requestId: string;
     targetVersion: number;
+    requestedLimit: number;
   }) => {
+    const file = attachedFiles[params.requestId];
+    if (params.requestedLimit > 50000 && !file) {
+      setSubmissionFeedback(
+        `⚠️ Justificatif obligatoire : Le montant demandé (${formatCurrency(
+          params.requestedLimit
+        )}) dépassant 50 000 DH, veuillez joindre une pièce justificative (justificatif de domicile, bon de commande, devis ou facture) ci-dessus avant de valider.`
+      );
+      setPendingDraftToRetry(params);
+      return;
+    }
+
     setIsSubmittingFromAi(true);
     setSubmissionFeedback(null);
     try {
+      // 1. If document is attached, upload it first to the draft
+      if (file) {
+        await api.uploadDocument(params.requestId, file);
+      }
+
+      // 2. Submit the request
       const submitted = await api.submitRequest(params.requestId, {
         targetVersion: params.targetVersion,
       });
 
       setSubmissionFeedback(
-        `✅ Demande ${submitted.reference} soumise avec succès au conseiller !`
+        `✅ Demande ${submitted.reference} validée et transmise avec succès à votre conseiller !`
       );
+      setPendingDraftToRetry(null);
 
       if (onSuccessSubmission) {
         onSuccessSubmission(submitted.reference || submitted.id);
       }
 
       await handleSendMessage(
-        `J'ai formellement confirmé et soumis ma demande ${submitted.reference}.`
+        `J'ai formellement confirmé et soumis ma demande ${submitted.reference}${
+          file ? ` avec justificatif joint (${file.name})` : ''
+        }.`
       );
     } catch (err: any) {
       setSubmissionFeedback(`❌ Erreur de soumission : ${err.message}`);
+      setPendingDraftToRetry(params);
     } finally {
       setIsSubmittingFromAi(false);
     }
@@ -243,6 +277,90 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
                       </div>
                     </div>
 
+                    {/* File Attachment / Supporting Justificatif */}
+                    {(() => {
+                      const reqId = m.confirmationMetadata.parameters.requestId;
+                      const isHighAmount =
+                        m.confirmationMetadata.parameters.requestedLimit > 50000;
+                      const attached = attachedFiles[reqId];
+
+                      return (
+                        <div className="p-2.5 rounded-xl border border-dashed border-teal-300 bg-teal-50/50 space-y-2 mt-2">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-teal-950 flex items-center gap-1.5">
+                              <Paperclip className="w-3.5 h-3.5 text-teal-700" />
+                              <span>
+                                {isHighAmount
+                                  ? 'Pièce justificative requise (> 50 000 DH ou Justificatif de domicile)'
+                                  : 'Pièce justificative (optionnelle)'}
+                              </span>
+                            </span>
+                            {isHighAmount && (
+                              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">
+                                Requis
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-[10px] text-teal-900 leading-tight">
+                            {isHighAmount
+                              ? 'Pour débloquer votre demande, veuillez joindre votre justificatif (justificatif de domicile, bon de commande, facture, etc.).'
+                              : 'Vous pouvez joindre un justificatif complémentaire pour votre conseiller.'}
+                          </p>
+
+                          {attached ? (
+                            <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-teal-300 text-xs shadow-2xs">
+                              <div className="flex items-center gap-2 truncate min-w-0">
+                                <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <div className="truncate">
+                                  <span className="font-semibold text-slate-800 truncate block text-[11px]">
+                                    {attached.name}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-mono">
+                                    {(attached.size / 1024).toFixed(0)} Ko
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAttachedFiles((prev) => {
+                                    const copy = { ...prev };
+                                    delete copy[reqId];
+                                    return copy;
+                                  });
+                                }}
+                                className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
+                                title="Supprimer ce fichier"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="cursor-pointer flex items-center justify-center gap-2 p-2 bg-white hover:bg-teal-100/60 border border-teal-300 hover:border-teal-400 rounded-lg text-xs font-semibold text-teal-900 transition-colors shadow-2xs">
+                              <Upload className="w-3.5 h-3.5 text-teal-700" />
+                              <span>Joindre mon justificatif de domicile / document (PDF, PNG, JPG)</span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf,.png,.jpg,.jpeg"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const file = e.target.files[0];
+                                    setAttachedFiles((prev) => ({
+                                      ...prev,
+                                      [reqId]: file,
+                                    }));
+                                    setSubmissionFeedback(null);
+                                  }
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     <Button
                       size="sm"
                       variant="success"
@@ -252,6 +370,8 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
                         handleConfirmAiDraft({
                           requestId: m.confirmationMetadata!.parameters.requestId,
                           targetVersion: m.confirmationMetadata!.parameters.targetVersion,
+                          requestedLimit:
+                            m.confirmationMetadata!.parameters.requestedLimit,
                         })
                       }
                     >
@@ -273,8 +393,65 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
         )}
 
         {submissionFeedback && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs font-semibold">
-            {submissionFeedback}
+          <div
+            className={`p-3.5 rounded-xl border text-xs space-y-2 ${
+              submissionFeedback.startsWith('✅')
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                : submissionFeedback.startsWith('⚠️')
+                ? 'bg-amber-50 border-amber-300 text-amber-900'
+                : 'bg-rose-50 border-rose-300 text-rose-900'
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              {submissionFeedback.startsWith('✅') ? (
+                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              )}
+              <span className="font-semibold leading-relaxed">
+                {submissionFeedback}
+              </span>
+            </div>
+
+            {/* If blocked by missing document / incomplete file, show instant unblock upload form */}
+            {pendingDraftToRetry && !submissionFeedback.startsWith('✅') && (
+              <div className="pt-2 border-t border-rose-200/80 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <label className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-300 bg-white text-xs font-semibold text-rose-800 hover:bg-rose-100 transition-colors shadow-2xs">
+                  <Upload className="w-3.5 h-3.5 text-rose-700" />
+                  <span>
+                    {attachedFiles[pendingDraftToRetry.requestId]
+                      ? attachedFiles[pendingDraftToRetry.requestId].name
+                      : 'Joindre mon justificatif de domicile maintenant'}
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const file = e.target.files[0];
+                        setAttachedFiles((prev) => ({
+                          ...prev,
+                          [pendingDraftToRetry.requestId]: file,
+                        }));
+                      }
+                    }}
+                  />
+                </label>
+
+                {attachedFiles[pendingDraftToRetry.requestId] && (
+                  <Button
+                    size="sm"
+                    variant="success"
+                    isLoading={isSubmittingFromAi}
+                    onClick={() => handleConfirmAiDraft(pendingDraftToRetry)}
+                    className="font-bold text-xs"
+                  >
+                    Débloquer et soumettre à nouveau
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,18 +1,20 @@
 import {
   Injectable,
+  Logger,
   BadRequestException,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { Role, UserSummary } from '@proorga/shared-types';
+import { Role, UserSummary, CustomerFileStatus } from '@proorga/shared-types';
 import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
   private readonly uploadDir = process.env.UPLOAD_DIR || './uploads';
 
   constructor(
@@ -88,6 +90,21 @@ export class DocumentsService {
       where: { id: requestId },
       data: { requiredDocumentsProvided: true },
     });
+
+    // If customer profile was incomplete (e.g. missing Justificatif de domicile or renewal CIN),
+    // this uploaded document regularizes the customer's compliance file.
+    if (request.customerProfile?.fileStatus === CustomerFileStatus.INCOMPLETE) {
+      await this.prisma.customerProfile.update({
+        where: { id: request.customerProfileId },
+        data: {
+          fileStatus: CustomerFileStatus.COMPLETE,
+          incompleteReason: null,
+        },
+      });
+      this.logger.log(
+        `Customer profile ${request.customerProfileId} regularized to COMPLETE upon uploading document: ${file.originalname}`
+      );
+    }
 
     await this.auditService.logEvent({
       actorId: currentUser.id,

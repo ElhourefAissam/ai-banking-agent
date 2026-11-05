@@ -111,6 +111,15 @@ export const api = {
     });
   },
 
+  async uploadKycDocument(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request<{ success: boolean; fileStatus: string; message: string }>('/customers/me/upload-kyc', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
   async updateCustomerProfile(
     id: string,
     payload: {

@@ -214,12 +214,30 @@ export class WorkflowService {
 
     // Rule 1: Customer file completeness
     if (request.customerProfile.fileStatus !== CustomerFileStatus.COMPLETE) {
-      throw new BadRequestException({
-        code: 'INCOMPLETE_CUSTOMER_FILE',
-        message: `Your customer file is marked as incomplete: ${
-          request.customerProfile.incompleteReason || 'KYC or identity documentation missing.'
-        }. Please contact customer support before submitting a limit increase.`,
-      });
+      const hasAttachedDocs =
+        (request.documents && request.documents.length > 0) ||
+        request.requiredDocumentsProvided;
+
+      if (hasAttachedDocs) {
+        // Customer provided a supporting/justifying document; regularize the profile automatically
+        await this.prisma.customerProfile.update({
+          where: { id: request.customerProfileId },
+          data: {
+            fileStatus: CustomerFileStatus.COMPLETE,
+            incompleteReason: null,
+          },
+        });
+        this.logger.log(
+          `Customer profile ${request.customerProfileId} regularized during submission with attached document.`
+        );
+      } else {
+        throw new BadRequestException({
+          code: 'INCOMPLETE_CUSTOMER_FILE',
+          message: `Your customer file is marked as incomplete: ${
+            request.customerProfile.incompleteReason || 'KYC or identity documentation missing.'
+          }. Please attach your supporting document (e.g. justificatif de domicile) to proceed.`,
+        });
+      }
     }
 
     // Rule 2: Amount bounds
