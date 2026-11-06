@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
-import { Activity, Shield, RefreshCw, Search, Code } from 'lucide-react';
+import { Activity, Shield, RefreshCw, Search, Code, Download } from 'lucide-react';
+import { exportToCsv } from '@/lib/export-csv';
 
 export const AuditView: React.FC = () => {
   const { t, formatDate } = useTranslation();
@@ -45,6 +46,28 @@ export const AuditView: React.FC = () => {
     );
   });
 
+  const handleExportCsv = () => {
+    exportToCsv(
+      `piste_audit_${new Date().toISOString().split('T')[0]}`,
+      [
+        { key: 'createdAt', label: 'Date & Heure', transform: (val) => formatDate(val) },
+        { key: 'action', label: 'Action' },
+        { key: 'actorEmail', label: 'Acteur', transform: (val) => val || 'Système / Automatique' },
+        { key: 'actorRole', label: 'Rôle' },
+        { key: 'entityType', label: 'Entité Ciblée' },
+        { key: 'entityId', label: 'ID Entité' },
+        { key: 'targetVersion', label: 'Version' },
+        { key: 'ipAddress', label: 'Adresse IP' },
+        {
+          key: 'metadata',
+          label: 'Métadonnées',
+          transform: (val) => (val ? JSON.stringify(val) : ''),
+        },
+      ],
+      filteredLogs
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -59,10 +82,22 @@ export const AuditView: React.FC = () => {
             Traçabilité intégrale de l'ensemble des interventions humaines, décisions et activations bancaires en direct de PostgreSQL.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={fetchLogs} isLoading={isLoading}>
-          <RefreshCw className="w-3.5 h-3.5 me-1.5" />
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={filteredLogs.length === 0}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="w-3.5 h-3.5 me-1.5 text-brand-600" />
+            Exporter CSV
+          </Button>
+          <Button size="sm" variant="outline" onClick={fetchLogs} isLoading={isLoading}>
+            <RefreshCw className="w-3.5 h-3.5 me-1.5" />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
       {errorMessage && (

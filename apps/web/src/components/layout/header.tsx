@@ -13,18 +13,22 @@ import {
   Sparkles,
   Menu,
   User,
+  Search,
+  Command,
 } from 'lucide-react';
 import { NotificationCenter } from '@/features/notifications/notification-center';
 
 interface HeaderProps {
   onOpenAiChat?: () => void;
   onOpenSimulator?: () => void;
+  onOpenCommandPalette?: () => void;
   onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenAiChat,
   onOpenSimulator,
+  onOpenCommandPalette,
   onToggleMobileMenu,
 }) => {
   const router = useRouter();
@@ -68,8 +72,39 @@ export const Header: React.FC<HeaderProps> = ({
         </Link>
       </div>
 
+      {/* Center: Command Palette Universal Search Trigger */}
+      {onOpenCommandPalette && (
+        <button
+          type="button"
+          onClick={onOpenCommandPalette}
+          className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 text-slate-500 hover:text-slate-800 text-xs border border-slate-200/80 transition-all cursor-pointer shadow-2xs w-64 lg:w-80 justify-between"
+          title="Recherche universelle (⌘K ou Ctrl+K)"
+        >
+          <div className="flex items-center gap-2">
+            <Search className="w-3.5 h-3.5 text-slate-400" />
+            <span className="truncate">Recherche universelle...</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <kbd className="font-mono text-[10px] bg-white text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 shadow-2xs">
+              ⌘K
+            </kbd>
+          </div>
+        </button>
+      )}
+
       {/* Right Actions: AI Chat button, Simulator button, Language Selector, Demo Account Switcher */}
       <div className="flex items-center gap-1.5 sm:gap-2.5">
+        {/* Mobile Search Button */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Recherche universelle"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        )}
         {/* Open AI Assistant Button */}
         {onOpenAiChat ? (
           <button

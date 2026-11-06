@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTranslation } from '@/i18n';
 import { Header } from './header';
 import { Sidebar } from './sidebar';
 import { SimulatorModal } from './simulator-modal';
+import { CommandPalette } from './command-palette';
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,19 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ children }) =>
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Global keyboard shortcut for Command Palette: Cmd + K / Ctrl + K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   if (isLoading) {
     return (
@@ -41,6 +55,7 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ children }) =>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
           onOpenSimulator={() => setIsSimulatorOpen(true)}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           onToggleMobileMenu={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
@@ -53,6 +68,13 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ children }) =>
       <SimulatorModal
         isOpen={isSimulatorOpen}
         onClose={() => setIsSimulatorOpen(false)}
+      />
+
+      {/* Universal Command Palette (Cmd + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onOpenSimulator={() => setIsSimulatorOpen(true)}
       />
     </div>
   );

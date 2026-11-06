@@ -190,6 +190,7 @@
   - [x] `/scenarios`: Scenarios runner test bench for the 7 official PDF scenarios.
   - [x] `/audit`: Real-time PostgreSQL audit trail explorer.
   - [x] `/`: Root role-based automatic redirection.
+  - [x] Removed demo scenarios feature from UI and routing per enterprise specifications.
 - [x] **Enterprise Slide-Over Drawer (`apps/web/src/components/ui/drawer.tsx`)**:
   - [x] Replaced centered modal with slide-over drawer from `end-0` (right in LTR, left in RTL).
   - [x] Backdrop blur overlay, ESC key listener, focus styles, sticky header and sticky footer.
@@ -199,3 +200,32 @@
   - [x] Refreshing (`F5`) or sharing link reloads the request drawer directly with authorization validation.
   - [x] Added "Partager le lien" copy-to-clipboard action with visual confirmation.
   - [x] Graceful IDOR defense message if user lacks access to the shared request.
+
+---
+
+## Phase 14: Enterprise Banking Polish & Advanced Production Capabilities
+- [x] **14.1: 📊 Tableau de bord Décisionnel & KPI Analytics (Conseiller & Superviseur)**:
+  - [x] Calcul et affichage en temps réel des KPI d'arbitrage dans l'espace Conseiller (Volume instruit, taux d'approbation, répartition par palier ≤30k / >30k / >50k, délai moyen).
+  - [x] Tableau de bord analytique dans l'espace Superviseur (Volume total sous arbitrage, taux de validation/rejet, alertes sur dépassements de seuil).
+  - [x] Visualisations métriques interactives (barres de progression, indicateurs de performance, compteurs d'activité).
+- [x] **14.2: 📥 Export des Données & Rapports Réglementaires (CSV UTF-8 BOM)**:
+  - [x] Utilitaire universel d'export CSV compatible Microsoft Excel avec UTF-8 BOM (`\uFEFF`) et assainissement des caractères.
+  - [x] Bouton d'export CSV pour les logs d'audit réglementaires (`/audit`).
+  - [x] Bouton d'export CSV pour la file de dossiers Conseiller (`/advisor`).
+  - [x] Bouton d'export CSV pour la file d'arbitrage Superviseur (`/supervisor`).
+  - [x] Bouton d'export CSV pour l'historique des demandes Client (`/requests`).
+- [x] **14.3: 🔐 Authentification Forte / Confirmation par OTP simulé (SCA / 3D Secure)**:
+  - [x] Modal de confirmation sécurisé avec code OTP à 6 chiffres pour les montants à fort enjeu (> 50 000 DH).
+  - [x] Chronomètre de validité (5 minutes), bouton de remplissage automatique pour démo, et badge de conformité bancaire DSP2.
+  - [x] Intégration sur le formulaire de demande client (`NewRequestForm`) et dans le tiroir IA (`AiChatDrawer`).
+- [x] **14.4: 🎛️ Simulateur Interactif d'Éligibilité & Jauge Réglementaire en temps réel (Client)**:
+  - [x] Jauge réglementaire dynamique sur `/requests/new` et `/dashboard` avec code couleur en direct :
+    - Vert (≤ 30 000 DH) : Délégation directe conseiller.
+    - Bleu (> 30 000 DH) : Double validation superviseur obligatoire.
+    - Ambre (> 50 000 DH) : Pièce justificative formelle et SCA requises.
+  - [x] Chronologie prévisionnelle interactive : calcul en direct de la date de prise d'effet, de la date d'expiration exacte et du retour automatique au plafond standard (10 000 DH).
+- [x] **14.5: 🔍 Barre de Recherche Universelle / Command Palette (`Cmd + K` / `Ctrl + K`)**:
+  - [x] Composant Command Palette accessible partout via raccourci clavier (`Cmd + K` / `Ctrl + K`) ou icône de recherche dans l'en-tête.
+  - [x] Recherche instantanée par référence de dossier (`REQ-2026-XXXX`), nom de client, compte bancaire.
+  - [x] Raccourcis de navigation directe vers `/dashboard`, `/requests`, `/advisor`, `/supervisor`, `/audit`, `/ai`.
+  - [x] Bascule rapide de rôle et d'utilisateur de test directement depuis la palette.

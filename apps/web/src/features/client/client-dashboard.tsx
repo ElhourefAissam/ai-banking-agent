@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/badge';
+import { RegulatorySimulator } from '@/components/ui/regulatory-simulator';
 import { useTranslation } from '@/i18n';
 import { BankAccountSummary, LimitRequestDetail, CustomerFileStatus } from '@proorga/shared-types';
 import {
@@ -14,6 +15,7 @@ import {
   ShieldCheck,
   TrendingUp,
   FileWarning,
+  Sparkles,
 } from 'lucide-react';
 
 interface ClientDashboardProps {
@@ -32,6 +34,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   onViewRequest,
 }) => {
   const { t, formatCurrency, formatDate } = useTranslation();
+  const [simAmount, setSimAmount] = useState<number>(35000);
+  const [simDuration, setSimDuration] = useState<number>(3);
 
   const isFileIncomplete = customerProfile?.fileStatus === CustomerFileStatus.INCOMPLETE;
   const activeRequest = requests.find(
@@ -188,6 +192,38 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             );
           })}
         </div>
+      </div>
+
+      {/* Feature 4: Interactive Eligibility & Regulatory Timeline Simulator */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-brand-600" />
+              Simulateur d'Éligibilité & Réglementation Prudentielle
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Ajustez vos paramètres pour simuler en temps réel le palier de risque et le circuit d'approbation.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={onNewRequest}
+            disabled={isFileIncomplete || Boolean(activeRequest && activeRequest.status === 'ACTIVE')}
+          >
+            <ArrowUpRight className="w-4 h-4 me-1.5" />
+            Déposer une demande
+          </Button>
+        </div>
+
+        <RegulatorySimulator
+          amount={simAmount}
+          durationDays={simDuration}
+          onAmountChange={setSimAmount}
+          onDurationChange={setSimDuration}
+          isInteractive={true}
+        />
       </div>
     </div>
   );

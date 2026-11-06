@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import { ChatMessage, AIMessageRole } from '@proorga/shared-types';
+import { OtpModal } from '@/components/ui/otp-modal';
 import {
   Bot,
   User,
@@ -38,6 +39,11 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
   const [submissionFeedback, setSubmissionFeedback] = useState<string | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<Record<string, File>>({});
   const [pendingDraftToRetry, setPendingDraftToRetry] = useState<{
+    requestId: string;
+    targetVersion: number;
+    requestedLimit: number;
+  } | null>(null);
+  const [pendingOtpDraft, setPendingOtpDraft] = useState<{
     requestId: string;
     targetVersion: number;
     requestedLimit: number;
@@ -109,6 +115,21 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
       return;
     }
 
+    // High amount requires Strong Customer Authentication (SCA) OTP
+    if (params.requestedLimit > 50000) {
+      setPendingOtpDraft(params);
+      return;
+    }
+
+    await executeFinalSubmission(params);
+  };
+
+  const executeFinalSubmission = async (params: {
+    requestId: string;
+    targetVersion: number;
+    requestedLimit: number;
+  }) => {
+    const file = attachedFiles[params.requestId];
     setIsSubmittingFromAi(true);
     setSubmissionFeedback(null);
     try {
@@ -126,6 +147,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
         `✅ Demande ${submitted.reference} validée et transmise avec succès à votre conseiller !`
       );
       setPendingDraftToRetry(null);
+      setPendingOtpDraft(null);
 
       if (onSuccessSubmission) {
         onSuccessSubmission(submitted.reference || submitted.id);
@@ -139,6 +161,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
     } catch (err: any) {
       setSubmissionFeedback(`❌ Erreur de soumission : ${err.message}`);
       setPendingDraftToRetry(params);
+      throw err;
     } finally {
       setIsSubmittingFromAi(false);
     }
@@ -501,6 +524,20 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onSuccessSubmission 
           <Send className="w-4 h-4" />
         </Button>
       </form>
+
+      {/* Strong Customer Authentication (SCA) OTP Modal for High-Value Requests (> 50,000 DH) */}
+      <OtpModal
+        isOpen={Boolean(pendingOtpDraft)}
+        onClose={() => setPendingOtpDraft(null)}
+        onConfirm={async () => {
+          if (pendingOtpDraft) {
+            await executeFinalSubmission(pendingOtpDraft);
+          }
+        }}
+        amount={pendingOtpDraft?.requestedLimit}
+        title="Validation par Authentification Forte (SCA)"
+        description="Conformément aux exigences de sécurité bancaire pour les opérations à fort montant (> 50 000 DH), veuillez saisir le code de sécurité temporaire reçu par SMS."
+      />
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { useTranslation } from '@/i18n';
 import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
-import { LimitRequestDetail, DecisionType } from '@proorga/shared-types';
+import { LimitRequestDetail, DecisionType, LimitRequestStatus } from '@proorga/shared-types';
 import {
   ShieldCheck,
   CheckCircle,
@@ -21,7 +21,14 @@ import {
   Eye,
   Clock,
   ArrowRight,
+  Download,
+  BarChart3,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  PieChart,
 } from 'lucide-react';
+import { exportToCsv } from '@/lib/export-csv';
 
 interface SupervisorWorkspaceProps {
   requests: LimitRequestDetail[];
@@ -52,6 +59,71 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
   const pastRequests = requests.filter(
     (r) => r.status !== 'PENDING_SUPERVISOR'
   );
+
+  const [showKpis, setShowKpis] = useState(true);
+
+  // Supervisor KPI Analytics
+  const totalEscalatedVolume = escalatedRequests.reduce(
+    (acc, r) => acc + Number(r.requestedLimit || 0),
+    0
+  );
+  const totalHistoricalVolume = pastRequests.reduce(
+    (acc, r) => acc + Number(r.requestedLimit || 0),
+    0
+  );
+  const approvedPast = pastRequests.filter(
+    (r) =>
+      r.status === LimitRequestStatus.APPROVED_PENDING_ACTIVATION ||
+      r.status === LimitRequestStatus.ACTIVE
+  );
+  const rejectedPast = pastRequests.filter(
+    (r) => r.status === LimitRequestStatus.REJECTED
+  );
+  const totalPastDecided = approvedPast.length + rejectedPast.length;
+  const supervisorApprovalRate =
+    totalPastDecided > 0
+      ? Math.round((approvedPast.length / totalPastDecided) * 100)
+      : 100;
+  const highValueEscalated = escalatedRequests.filter(
+    (r) => Number(r.requestedLimit) > 50000
+  ).length;
+
+  const handleExportCsv = () => {
+    const dataToExport = activeTab === 'pending' ? escalatedRequests : pastRequests;
+    exportToCsv(
+      `arbitrage_superviseur_${activeTab}_${new Date().toISOString().split('T')[0]}`,
+      [
+        { key: 'reference', label: 'Référence' },
+        {
+          key: 'customerProfile.user',
+          label: 'Client',
+          transform: (_, r) =>
+            `${r.customerProfile?.user?.lastName || ''} ${r.customerProfile?.user?.firstName || ''}`.trim() || 'N/A',
+        },
+        { key: 'customerProfile.cin', label: 'CIN', transform: (val) => val || 'N/A' },
+        { key: 'requestedLimit', label: 'Plafond Sollicité (DH)', transform: (val) => Number(val) },
+        { key: 'durationDays', label: 'Durée (Jours)' },
+        { key: 'status', label: 'Statut' },
+        {
+          key: 'advisorRecommendation',
+          label: 'Avis Conseiller',
+          transform: (val) => val || 'En attente',
+        },
+        {
+          key: 'advisorMotive',
+          label: 'Motif Conseiller',
+          transform: (val) => val || 'N/A',
+        },
+        {
+          key: 'decisionReason',
+          label: 'Décision Superviseur',
+          transform: (val) => val || 'N/A',
+        },
+        { key: 'createdAt', label: 'Date Demande', transform: (val) => formatDate(val) },
+      ],
+      dataToExport
+    );
+  };
 
   const handleOpenDecision = (req: LimitRequestDetail, mode: 'APPROVE' | 'REJECT') => {
     setSelectedRequest(req);
@@ -112,6 +184,32 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowKpis(!showKpis)}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <BarChart3 className="w-3.5 h-3.5 me-1.5 text-purple-600" />
+            {showKpis ? 'Masquer KPI' : 'Afficher KPI'}
+            {showKpis ? (
+              <ChevronUp className="w-3.5 h-3.5 ms-1 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 ms-1 text-slate-400" />
+            )}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={(activeTab === 'pending' ? escalatedRequests : pastRequests).length === 0}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="w-3.5 h-3.5 me-1.5 text-purple-600" />
+            Exporter CSV
+          </Button>
+
           <span className="px-3 py-1.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-900 font-bold text-xs">
             {escalatedRequests.length} Dossier(s) en attente
           </span>
@@ -120,6 +218,79 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Feature 1: Collapsible Supervisor KPI Dashboard */}
+      {showKpis && (
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4 animate-in fade-in-0 duration-150">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-purple-100 text-purple-800">
+                <BarChart3 className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                Tableau de Bord de Contrôle Hiérarchique & Arbitrage
+              </h3>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Mis à jour en temps réel
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Metric 1: Pending Escalated Volume */}
+            <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-200/80 space-y-1">
+              <span className="text-[11px] font-semibold text-purple-800 uppercase tracking-wider">
+                Volume en Attente d'Arbitrage
+              </span>
+              <div className="font-mono text-xl font-bold text-purple-950">
+                {formatCurrency(totalEscalatedVolume)}
+              </div>
+              <div className="text-[11px] text-purple-700">
+                {escalatedRequests.length} dossier(s) en instance
+              </div>
+            </div>
+
+            {/* Metric 2: Approval Rate */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Taux de Faisabilité Superviseur
+              </span>
+              <div className="font-mono text-xl font-bold text-emerald-700">
+                {supervisorApprovalRate}%
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {approvedPast.length} validés / {totalPastDecided} passés
+              </div>
+            </div>
+
+            {/* Metric 3: Critical Risks (> 50k) */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Arbitrages à Fort Risque (&gt; 50k)
+              </span>
+              <div className="font-mono text-xl font-bold text-amber-700">
+                {highValueEscalated}
+              </div>
+              <div className="text-[11px] text-slate-500">
+                Contrôle des pièces justificatives requis
+              </div>
+            </div>
+
+            {/* Metric 4: Total Past Volume */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Volume Total Historique
+              </span>
+              <div className="font-mono text-xl font-bold text-slate-800">
+                {formatCurrency(totalHistoricalVolume)}
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {pastRequests.length} dossier(s) clôturés
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Switcher Tabs: Escalated Queue vs Past Requests History */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">

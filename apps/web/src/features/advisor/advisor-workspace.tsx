@@ -26,7 +26,14 @@ import {
   Eye,
   History,
   Clock,
+  Download,
+  BarChart3,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  PieChart,
 } from 'lucide-react';
+import { exportToCsv } from '@/lib/export-csv';
 
 interface AdvisorWorkspaceProps {
   requests: LimitRequestDetail[];
@@ -114,6 +121,58 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
     (r) => r.status === 'ACTIVE' || r.status === 'APPROVED_PENDING_ACTIVATION'
   ).length;
 
+  const [showKpis, setShowKpis] = useState(true);
+
+  // Feature 1: KPI Analytics Calculations
+  const totalVolume = requests.reduce((acc, r) => acc + Number(r.requestedLimit || 0), 0);
+  const approvedRequests = requests.filter(
+    (r) =>
+      r.status === LimitRequestStatus.APPROVED_PENDING_ACTIVATION ||
+      r.status === LimitRequestStatus.ACTIVE
+  );
+  const rejectedRequests = requests.filter((r) => r.status === LimitRequestStatus.REJECTED);
+  const decidedCount = approvedRequests.length + rejectedRequests.length;
+  const approvalRate = decidedCount > 0 ? Math.round((approvedRequests.length / decidedCount) * 100) : 100;
+
+  const tier1Count = requests.filter((r) => Number(r.requestedLimit) <= BANKING_RULES.ADVISOR_MAX_THRESHOLD).length;
+  const tier2Count = requests.filter(
+    (r) =>
+      Number(r.requestedLimit) > BANKING_RULES.ADVISOR_MAX_THRESHOLD &&
+      Number(r.requestedLimit) <= BANKING_RULES.DOCUMENT_REQUIRED_THRESHOLD
+  ).length;
+  const tier3Count = requests.filter((r) => Number(r.requestedLimit) > BANKING_RULES.DOCUMENT_REQUIRED_THRESHOLD).length;
+
+  const tier1Pct = requests.length > 0 ? Math.round((tier1Count / requests.length) * 100) : 0;
+  const tier2Pct = requests.length > 0 ? Math.round((tier2Count / requests.length) * 100) : 0;
+  const tier3Pct = requests.length > 0 ? Math.round((tier3Count / requests.length) * 100) : 0;
+
+  const handleExportCsv = () => {
+    exportToCsv(
+      `portefeuille_conseiller_${new Date().toISOString().split('T')[0]}`,
+      [
+        { key: 'reference', label: 'Référence' },
+        {
+          key: 'customerProfile.user',
+          label: 'Client',
+          transform: (_, r) =>
+            `${r.customerProfile?.user?.lastName || ''} ${r.customerProfile?.user?.firstName || ''}`.trim() || 'N/A',
+        },
+        { key: 'customerProfile.cin', label: 'CIN', transform: (val) => val || 'N/A' },
+        { key: 'requestedLimit', label: 'Plafond Demandé (DH)', transform: (val) => Number(val) },
+        { key: 'durationDays', label: 'Durée (Jours)' },
+        { key: 'status', label: 'Statut' },
+        {
+          key: 'customerProfile.fileStatus',
+          label: 'Dossier KYC',
+          transform: (val) => (val === 'COMPLETE' ? 'Complet' : 'Incomplet'),
+        },
+        { key: 'documents', label: 'Documents Joints', transform: (docs) => docs?.length || 0 },
+        { key: 'createdAt', label: 'Date Création', transform: (val) => formatDate(val) },
+      ],
+      filteredRequests
+    );
+  };
+
   const handleOpenDecision = (
     req: LimitRequestDetail,
     mode: 'APPROVE' | 'RECOMMEND' | 'COMPLEMENT' | 'REJECT'
@@ -186,6 +245,32 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowKpis(!showKpis)}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <BarChart3 className="w-3.5 h-3.5 me-1.5 text-indigo-600" />
+            {showKpis ? 'Masquer KPI' : 'Afficher KPI'}
+            {showKpis ? (
+              <ChevronUp className="w-3.5 h-3.5 ms-1 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 ms-1 text-slate-400" />
+            )}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={filteredRequests.length === 0}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="w-3.5 h-3.5 me-1.5 text-brand-600" />
+            Exporter CSV
+          </Button>
+
           <span className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 font-bold text-xs">
             {requests.length} Dossier(s) Total
           </span>
@@ -196,6 +281,134 @@ export const AdvisorWorkspace: React.FC<AdvisorWorkspaceProps> = ({
           )}
         </div>
       </div>
+
+      {/* Feature 1: Collapsible Decision KPI Dashboard */}
+      {showKpis && (
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4 animate-in fade-in-0 duration-150">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-indigo-100 text-indigo-800">
+                <BarChart3 className="w-4 h-4" />
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                Tableau de Bord Décisionnel & Performance Portefeuille
+              </h3>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Mis à jour en temps réel
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Metric 1: Total Volume */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Volume Total Instruit
+              </span>
+              <div className="font-mono text-xl font-bold text-slate-900">
+                {formatCurrency(totalVolume)}
+              </div>
+              <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-emerald-600" />
+                <span>Cumul des montants demandés</span>
+              </div>
+            </div>
+
+            {/* Metric 2: Approval Rate */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Taux d'Approbation
+              </span>
+              <div className="font-mono text-xl font-bold text-emerald-700">
+                {approvalRate}%
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {approvedRequests.length} validés / {decidedCount} arbitrés
+              </div>
+            </div>
+
+            {/* Metric 3: Actionable Queue */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Dossiers Prioritaires
+              </span>
+              <div className="font-mono text-xl font-bold text-amber-600">
+                {actionableCount}
+              </div>
+              <div className="text-[11px] text-slate-500">
+                Sous revue ou en attente d'instruction
+              </div>
+            </div>
+
+            {/* Metric 4: High Value Ratio */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Seuils Critiques (&gt; 50k)
+              </span>
+              <div className="font-mono text-xl font-bold text-purple-700">
+                {tier3Count} <span className="text-xs font-normal text-slate-400">({tier3Pct}%)</span>
+              </div>
+              <div className="text-[11px] text-slate-500">
+                Justificatif formel obligatoire
+              </div>
+            </div>
+          </div>
+
+          {/* Distribution by Regulatory Tier */}
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <PieChart className="w-3.5 h-3.5 text-indigo-600" />
+                Répartition Réglementaire par Palier de Risque
+              </span>
+              <span className="font-mono text-[11px] text-slate-500">
+                Total : {requests.length} dossiers
+              </span>
+            </div>
+
+            {/* Segmented Bar */}
+            <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden flex">
+              <div
+                style={{ width: `${tier1Pct}%` }}
+                className="bg-emerald-500 h-full transition-all"
+                title={`Palier 1 (≤ 30k) : ${tier1Count} (${tier1Pct}%)`}
+              />
+              <div
+                style={{ width: `${tier2Pct}%` }}
+                className="bg-blue-500 h-full transition-all"
+                title={`Palier 2 (30k - 50k) : ${tier2Count} (${tier2Pct}%)`}
+              />
+              <div
+                style={{ width: `${tier3Pct}%` }}
+                className="bg-purple-600 h-full transition-all"
+                title={`Palier 3 (> 50k) : ${tier3Count} (${tier3Pct}%)`}
+              />
+            </div>
+
+            {/* Legend */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-slate-600">
+                  ≤ 30k DH (Délégation directe) : <strong className="text-slate-900">{tier1Count}</strong> ({tier1Pct}%)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                <span className="text-slate-600">
+                  30k - 50k DH (Recommandation) : <strong className="text-slate-900">{tier2Count}</strong> ({tier2Pct}%)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0" />
+                <span className="text-slate-600">
+                  &gt; 50k DH (Justificatif requis) : <strong className="text-slate-900">{tier3Count}</strong> ({tier3Pct}%)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Category Filter Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { OtpModal } from '@/components/ui/otp-modal';
+import { RegulatorySimulator } from '@/components/ui/regulatory-simulator';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import { BankAccountSummary, BANKING_RULES } from '@proorga/shared-types';
@@ -43,6 +45,7 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
 
   // Synchronize selectedAccountId when accounts load asynchronously
   useEffect(() => {
@@ -285,6 +288,12 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
             </div>
           </div>
 
+          {/* Interactive Regulatory Simulator & Timeline */}
+          <RegulatorySimulator
+            amount={requestedLimit}
+            durationDays={durationDays}
+          />
+
           {/* Reason */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-2">
@@ -433,7 +442,14 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
             <Button
               variant="success"
               size="sm"
-              onClick={handleFinalSubmit}
+              onClick={() => {
+                if (requestedLimit > BANKING_RULES.DOCUMENT_REQUIRED_THRESHOLD) {
+                  setIsConfirmationOpen(false);
+                  setIsOtpOpen(true);
+                } else {
+                  handleFinalSubmit();
+                }
+              }}
               isLoading={isSubmitting}
             >
               <CheckCircle className="w-4 h-4 me-1.5" />
@@ -442,6 +458,18 @@ export const NewRequestForm: React.FC<NewRequestFormProps> = ({
           </div>
         </div>
       </Modal>
+
+      {/* Strong Customer Authentication (SCA) OTP Modal for High-Value Requests (> 50,000 DH) */}
+      <OtpModal
+        isOpen={isOtpOpen}
+        onClose={() => setIsOtpOpen(false)}
+        onConfirm={async () => {
+          await handleFinalSubmit();
+        }}
+        amount={requestedLimit}
+        title="Validation par Authentification Forte (SCA)"
+        description="Conformément aux exigences de sécurité bancaire pour les opérations à fort montant (> 50 000 DH), veuillez saisir le code de sécurité temporaire reçu par SMS."
+      />
     </div>
   );
 };

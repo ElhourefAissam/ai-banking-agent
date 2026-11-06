@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/badge';
 import { useTranslation } from '@/i18n';
 import { LimitRequestDetail } from '@proorga/shared-types';
-import { PlusCircle, FileText, ArrowRight } from 'lucide-react';
+import { PlusCircle, FileText, ArrowRight, Download } from 'lucide-react';
+import { exportToCsv } from '@/lib/export-csv';
 
 interface MyRequestsViewProps {
   requests: LimitRequestDetail[];
@@ -21,9 +22,26 @@ export const MyRequestsView: React.FC<MyRequestsViewProps> = ({
 }) => {
   const { t, formatCurrency, formatDate } = useTranslation();
 
+  const handleExportCsv = () => {
+    exportToCsv(
+      `mes_demandes_${new Date().toISOString().split('T')[0]}`,
+      [
+        { key: 'reference', label: 'Référence' },
+        { key: 'requestedLimit', label: 'Plafond Demandé (DH)', transform: (val) => Number(val) },
+        { key: 'durationDays', label: 'Durée (Jours)' },
+        { key: 'createdAt', label: 'Date de Création', transform: (val) => formatDate(val) },
+        { key: 'status', label: 'Statut' },
+        { key: 'account.rib', label: 'RIB Compte' },
+        { key: 'reason', label: 'Motif' },
+        { key: 'decisionReason', label: 'Motif Décision' },
+      ],
+      requests
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900">{t('nav.myRequests')}</h1>
           <p className="text-xs text-slate-500">
@@ -31,10 +49,22 @@ export const MyRequestsView: React.FC<MyRequestsViewProps> = ({
           </p>
         </div>
 
-        <Button size="sm" variant="primary" onClick={onNewRequest}>
-          <PlusCircle className="w-4 h-4 me-1.5" />
-          {t('nav.newRequest')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={requests.length === 0}
+            className="border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="w-3.5 h-3.5 me-1.5 text-brand-600" />
+            Exporter CSV
+          </Button>
+          <Button size="sm" variant="primary" onClick={onNewRequest}>
+            <PlusCircle className="w-4 h-4 me-1.5" />
+            {t('nav.newRequest')}
+          </Button>
+        </div>
       </div>
 
       <Card className="p-0 overflow-hidden">
