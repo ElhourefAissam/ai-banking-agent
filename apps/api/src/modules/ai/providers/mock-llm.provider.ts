@@ -1,6 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ILlmProvider, LlmMessage, LlmCompletionResponse } from '../interfaces/llm-provider.interface';
+import {
+  ILlmProvider,
+  LlmMessage,
+  LlmCompletionResponse,
+} from '../interfaces/llm-provider.interface';
 import { ToolDefinition, ToolCallPayload, BANKING_RULES } from '@proorga/shared-types';
+import * as translationsJson from '../i18n/mock-llm.translations.json';
+
+type SupportedLang = 'fr' | 'en' | 'ar';
+
+function detectLanguage(prompt: string): SupportedLang {
+  if (/[\u0600-\u06FF]/.test(prompt)) return 'ar';
+  if (/\b(want|increase|limit|ceiling|need|days?|balance|how|much|check|my)\b/i.test(prompt)) {
+    return 'en';
+  }
+  return 'fr';
+}
+
+function translate(lang: SupportedLang, key: string, params: Record<string, any> = {}): string {
+  const dict = (translationsJson as any)[lang] || (translationsJson as any)['fr'];
+  let template = dict[key] || (translationsJson as any)['fr'][key] || '';
+  for (const [k, v] of Object.entries(params)) {
+    template = template.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+  }
+  return template;
+}
 
 @Injectable()
 export class MockLlmProvider implements ILlmProvider {
@@ -14,8 +38,9 @@ export class MockLlmProvider implements ILlmProvider {
     const lastMessage = messages[messages.length - 1];
     const userPrompt = lastMessage.content || '';
     const lowerPrompt = userPrompt.toLowerCase();
+    const lang = detectLanguage(userPrompt);
 
-    this.logger.log(`Mock LLM processing prompt: "${userPrompt.substring(0, 80)}..."`);
+    this.logger.log(`Mock LLM processing prompt [${lang}]: "${userPrompt.substring(0, 80)}..."`);
 
     // 1. Detect if the previous step was a tool execution output
     if (lastMessage.role === 'tool') {
@@ -23,18 +48,25 @@ export class MockLlmProvider implements ILlmProvider {
         const toolOutput = JSON.parse(lastMessage.content);
         if (lastMessage.name === 'get_account_limit') {
           return {
-            content: `Voici les informations de votre compte bancaire :\n- **Plafond initial standard :** ${toolOutput.initialTransferLimit} DH\n- **Plafond de virement actuel :** ${toolOutput.currentTransferLimit} DH\n- **Solde disponible :** ${toolOutput.balance} DH (${toolOutput.currency})\n\nSouhaitez-vous préparer une demande d'augmentation temporaire de votre plafond ? (Montant possible de 10 001 à 100 000 DH, pour 1 à 7 jours).`,
+            content: translate(lang, 'account_limit_info', {
+              initialTransferLimit: toolOutput.initialTransferLimit,
+              currentTransferLimit: toolOutput.currentTransferLimit,
+              balance: toolOutput.balance,
+              currency: toolOutput.currency,
+            }),
           };
         }
 
         if (lastMessage.name === 'get_customer_file_status') {
           if (toolOutput.fileStatus === 'COMPLETE') {
             return {
-              content: `Votre dossier client est **Complet et conforme**. Vous êtes pleinement éligible pour soumettre une demande d'augmentation de plafond de virement.`,
+              content: translate(lang, 'customer_file_complete'),
             };
           } else {
             return {
-              content: `⚠️ **Attention : Votre dossier client est incomplet.**\nMotif : ${toolOutput.incompleteReason || 'Pièces justificatives requises manquantes'}.\n\nTant que votre dossier n'est pas régularisé en agence ou auprès de votre conseiller, le système bancaire ne permet pas la soumission d'une demande de plafond.`,
+              content: translate(lang, 'customer_file_incomplete', {
+                reason: toolOutput.incompleteReason || 'Pièces justificatives requises manquantes',
+              }),
             };
           }
         }
@@ -42,11 +74,15 @@ export class MockLlmProvider implements ILlmProvider {
         if (lastMessage.name === 'check_eligibility') {
           if (toolOutput.isEligible) {
             return {
-              content: `✅ Votre compte est parfaitement éligible pour une augmentation temporaire de plafond. Votre plafond actuel est de ${toolOutput.currentLimit} DH.`,
+              content: translate(lang, 'eligibility_eligible', {
+                currentLimit: toolOutput.currentLimit,
+              }),
             };
           } else {
             return {
-              content: `❌ Votre compte n'est pas éligible actuellement pour la raison suivante :\n- ${toolOutput.reasons.join('\n- ')}`,
+              content: translate(lang, 'eligibility_ineligible', {
+                reasons: toolOutput.reasons.join('\n- '),
+              }),
             };
           }
         }
@@ -54,19 +90,26 @@ export class MockLlmProvider implements ILlmProvider {
         if (lastMessage.name === 'create_limit_request_draft') {
           if (toolOutput.error) {
             return {
-              content: `⚠️ **Impossible de préparer la demande** : ${toolOutput.error}\n\nVeuillez vérifier vos paramètres et vous assurer que le montant est strictement compris entre 10 001 DH et 100 000 DH et la durée entre 1 et 7 jours.`,
+              content: translate(lang, 'draft_error', { error: toolOutput.error }),
             };
           }
 
-          const docNote = toolOutput.requestedLimit > 50000
-            ? `\n> ⚠️ *Note réglementaire : Le montant demandé dépassant 50 000 DH, un justificatif (bon de commande, facture) sera obligatoire avant la soumission formelle.*`
-            : '';
-          const thresholdNote = toolOutput.requestedLimit > 30000
-            ? `\n> ℹ️ *Circuit de validation : Cette demande supérieure à 30 000 DH nécessitera une recommandation de votre conseiller puis la validation d'un superviseur.*`
-            : `\n> ℹ️ *Circuit de validation : Cette demande (≤ 30 000 DH) relève de la délégation directe de votre conseiller.*`;
+          const docNote =
+            toolOutput.requestedLimit > 50000 ? translate(lang, 'draft_doc_note') : '';
+          const thresholdNote =
+            toolOutput.requestedLimit > 30000
+              ? translate(lang, 'draft_threshold_supervisor')
+              : translate(lang, 'draft_threshold_advisor');
 
           return {
-            content: `J'ai préparé votre brouillon de demande avec les paramètres suivants :\n- **Référence :** ${toolOutput.reference}\n- **Nouveau plafond souhaité :** ${toolOutput.requestedLimit} DH\n- **Durée :** ${toolOutput.durationDays} jour(s)\n- **Motif :** ${toolOutput.reason}${docNote}${thresholdNote}\n\nVeuillez vérifier attentivement ces données ci-dessus et confirmer la soumission via le formulaire dédié. Une simple conversation ne vaut pas engagement.`,
+            content: translate(lang, 'draft_prepared', {
+              reference: toolOutput.reference,
+              requestedLimit: toolOutput.requestedLimit,
+              durationDays: toolOutput.durationDays,
+              reason: toolOutput.reason,
+              docNote,
+              thresholdNote,
+            }),
           };
         }
       } catch (err) {
@@ -85,7 +128,7 @@ export class MockLlmProvider implements ILlmProvider {
       lowerPrompt.includes('contourne')
     ) {
       return {
-        content: `Je suis l'assistant bancaire PROORGA et je respecte strictement les règles de conformité et de séparation des tâches. Je ne dispose d'aucun pouvoir de décision ou d'approbation directe, et les plafonds sont octroyés exclusivement par votre conseiller et la hiérarchie bancaire après examen de votre dossier.`,
+        content: translate(lang, 'anti_injection'),
       };
     }
 
@@ -106,9 +149,6 @@ export class MockLlmProvider implements ILlmProvider {
       const parsedAmount = parseInt(amountMatch[1].replace(/\s+/g, ''), 10);
       const parsedDuration = durationMatch ? parseInt(durationMatch[1], 10) : 3;
 
-      const isEnglish = /\b(want|increase|limit|ceiling|need|days?)\b/i.test(userPrompt);
-      const isArabic = /[\u0600-\u06FF]/.test(userPrompt);
-
       // STRICT BUSINESS VALIDATION BEFORE PREPARING DRAFT OR ASKING TO SUBMIT:
       // 1. Amount validation: strictly > 10,000 DH and <= 100,000 DH
       if (
@@ -116,18 +156,21 @@ export class MockLlmProvider implements ILlmProvider {
         parsedAmount <= BANKING_RULES.INITIAL_TRANSFER_LIMIT ||
         parsedAmount > BANKING_RULES.MAX_REQUESTED_LIMIT
       ) {
-        if (isEnglish) {
-          return {
-            content: `⚠️ **Invalid Requested Limit**:\nRequested limit must be strictly between ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')} DH and ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('en-US')} DH (your standard base limit is already ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')} DH).\n\nYour request for **${parsedAmount.toLocaleString('en-US')} DH** cannot be prepared. Please specify an amount strictly greater than ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')} DH and up to ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('en-US')} DH.`,
-          };
-        } else if (isArabic) {
-          return {
-            content: `⚠️ **المبلغ المطلوب غير مطابق للضوابط البنكية**:\nيجب أن يكون سقف التحويل المؤقت أكبر قطعا من ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} درهم وبحد أقصى ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('fr-FR')} درهم (سقفكم الحالي هو ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} درهم).\n\nطلبكم لمبلغ **${parsedAmount.toLocaleString('fr-FR')} درهم** لا يمكن إعداده. يرجى تحديد مبلغ بين 10,001 درهم و 100,000 درهم.`,
-          };
-        }
-
         return {
-          content: `⚠️ **Montant non conforme aux règles bancaires** :\nLe montant d'un relèvement temporaire de plafond doit être **strictement supérieur à ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} DH** et **au maximum de ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('fr-FR')} DH** (votre plafond standard de base étant déjà de ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} DH).\n\nVotre demande pour **${parsedAmount.toLocaleString('fr-FR')} DH** ne peut pas être enregistrée. Veuillez indiquer un montant valide compris entre 10 001 DH et 100 000 DH.`,
+          content: translate(lang, 'invalid_amount', {
+            minLimit:
+              lang === 'en'
+                ? BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')
+                : BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR'),
+            maxLimit:
+              lang === 'en'
+                ? BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('en-US')
+                : BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('fr-FR'),
+            amount:
+              lang === 'en'
+                ? parsedAmount.toLocaleString('en-US')
+                : parsedAmount.toLocaleString('fr-FR'),
+          }),
         };
       }
 
@@ -137,18 +180,12 @@ export class MockLlmProvider implements ILlmProvider {
         parsedDuration < BANKING_RULES.MIN_DURATION_DAYS ||
         parsedDuration > BANKING_RULES.MAX_DURATION_DAYS
       ) {
-        if (isEnglish) {
-          return {
-            content: `⚠️ **Invalid Duration**:\nTemporary limit duration must be between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} calendar days.\n\nYour request for **${parsedDuration} days** cannot be prepared. Please specify a duration between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} days.`,
-          };
-        } else if (isArabic) {
-          return {
-            content: `⚠️ **المدة المطلوبة غير مطابقة للضوابط البنكية**:\nيجب أن تكون مدة الرفع المؤقت بين ${BANKING_RULES.MIN_DURATION_DAYS} و ${BANKING_RULES.MAX_DURATION_DAYS} أيام.\n\nطلبكم لمدة **${parsedDuration} أيام** لا يمكن إعداده. يرجى تحديد مدة بين 1 و 7 أيام.`,
-          };
-        }
-
         return {
-          content: `⚠️ **Durée non conforme aux règles bancaires** :\nLa durée d'un relèvement temporaire de plafond doit être comprise **entre ${BANKING_RULES.MIN_DURATION_DAYS} et ${BANKING_RULES.MAX_DURATION_DAYS} jours** consécutifs.\n\nVotre demande pour **${parsedDuration} jours** ne peut pas être enregistrée. Veuillez indiquer une durée valide comprise entre 1 et 7 jours.`,
+          content: translate(lang, 'invalid_duration', {
+            minDays: BANKING_RULES.MIN_DURATION_DAYS,
+            maxDays: BANKING_RULES.MAX_DURATION_DAYS,
+            duration: parsedDuration,
+          }),
         };
       }
 
@@ -156,7 +193,11 @@ export class MockLlmProvider implements ILlmProvider {
 
       if (lowerPrompt.includes('voyage') || lowerPrompt.includes('vacance')) {
         reason = 'Dépenses et réservations de voyage / vacances';
-      } else if (lowerPrompt.includes('achat') || lowerPrompt.includes('véhicule') || lowerPrompt.includes('voiture')) {
+      } else if (
+        lowerPrompt.includes('achat') ||
+        lowerPrompt.includes('véhicule') ||
+        lowerPrompt.includes('voiture')
+      ) {
         reason = 'Acompte / achat véhicule ou équipement';
       } else if (lowerPrompt.includes('travaux')) {
         reason = 'Règlement artisans / travaux de rénovation';
@@ -176,7 +217,10 @@ export class MockLlmProvider implements ILlmProvider {
         };
 
         return {
-          content: `Je consulte les informations de votre compte et prépare votre demande de plafond de ${parsedAmount} DH pour ${parsedDuration} jours...`,
+          content: translate(lang, 'preparing_draft', {
+            amount: parsedAmount,
+            duration: parsedDuration,
+          }),
           toolCalls: [toolCall],
         };
       }
@@ -193,7 +237,7 @@ export class MockLlmProvider implements ILlmProvider {
       const hasLimitTool = availableTools.some((t) => t.name === 'get_account_limit');
       if (hasLimitTool) {
         return {
-          content: 'Je consulte votre plafond actuel...',
+          content: translate(lang, 'checking_limit'),
           toolCalls: [
             {
               id: `call_${Date.now()}`,
@@ -216,7 +260,7 @@ export class MockLlmProvider implements ILlmProvider {
       const hasFileTool = availableTools.some((t) => t.name === 'get_customer_file_status');
       if (hasFileTool) {
         return {
-          content: 'Je vérifie l’état de complétude de votre dossier client...',
+          content: translate(lang, 'checking_file'),
           toolCalls: [
             {
               id: `call_${Date.now()}`,
@@ -230,7 +274,7 @@ export class MockLlmProvider implements ILlmProvider {
 
     // 6. General Greeting or Assistance
     return {
-      content: `Bonjour ! Je suis l'assistant bancaire PROORGA. Je peux vous renseigner sur vos plafonds de virement actuels, vérifier la complétude de votre dossier, ou vous aider à préparer une demande d'augmentation temporaire de plafond (jusqu'à 100 000 DH pour 1 à 7 jours). Que puis-je faire pour vous aujourd'hui ?`,
+      content: translate(lang, 'greeting'),
     };
   }
 }

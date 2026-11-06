@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Bot,
   Activity,
-  Play,
   User,
   X,
 } from 'lucide-react';
@@ -42,7 +41,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isAiActive = pathname === '/ai';
   const isAdvisorActive = pathname.startsWith('/advisor');
   const isSupervisorActive = pathname.startsWith('/supervisor');
-  const isScenariosActive = pathname === '/scenarios';
   const isAuditActive = pathname === '/audit';
   const isProfileActive = pathname === '/profile';
 
@@ -155,23 +153,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>{t('nav.profile')}</span>
         </Link>
 
-        <div className="pt-4 border-t border-slate-800/80 my-2 space-y-1.5">
-          <Link
-            href="/scenarios"
-            onClick={() => onClose?.()}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 text-start active:scale-[0.98] ${
-              isScenariosActive
-                ? 'bg-emerald-600 text-white font-semibold shadow-xs ring-1 ring-emerald-400/30'
-                : 'text-emerald-400 hover:bg-slate-800/80 hover:text-emerald-300'
-            }`}
-          >
-            <Play className="w-4 h-4 shrink-0 fill-current" />
-            <span>Scénarios de Recette (S1-S7)</span>
-          </Link>
-
-          {(user.role === Role.CONSEILLER ||
-            user.role === Role.SUPERVISEUR ||
-            user.role === Role.ADMIN) && (
+        {(user.role === Role.CONSEILLER ||
+          user.role === Role.SUPERVISEUR ||
+          user.role === Role.ADMIN) && (
+          <div className="pt-4 border-t border-slate-800/80 my-2 space-y-1.5">
             <Link
               href="/audit"
               onClick={() => onClose?.()}
@@ -184,8 +169,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Activity className="w-4 h-4 shrink-0" />
               <span>{t('nav.auditTrail')}</span>
             </Link>
-          )}
-        </div>
+          </div>
+        )}
       </nav>
 
       {/* Footer Info */}

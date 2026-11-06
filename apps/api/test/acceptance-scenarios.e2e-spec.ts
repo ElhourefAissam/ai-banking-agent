@@ -502,7 +502,7 @@ describe('PROORGA — 7 Official Technical Assignment Acceptance Scenarios', () 
         });
 
       expect(res.status).toBe(201);
-      expect(res.body.content).toContain('respecte strictement les règles');
+      expect(res.body.content.toLowerCase()).toMatch(/strictly adhere to compliance|respecte strictement les règles/);
       expect(res.body.confirmationMetadata).toBeUndefined();
     });
 
