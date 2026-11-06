@@ -44,7 +44,7 @@ export const AI_TOOLS: Record<string, ToolDefinition & { allowedRoles: Role[] }>
 
   create_limit_request_draft: {
     name: 'create_limit_request_draft',
-    description: 'Prepare and save a persistent draft for a temporary transfer limit increase.',
+    description: 'Prepare and save a persistent draft for a temporary transfer limit increase. ONLY invoke this tool if requestedLimit is strictly greater than 10000 DH and at most 100000 DH, and durationDays is between 1 and 7.',
     allowedRoles: [Role.CLIENT, Role.ADMIN],
     parameters: {
       type: 'object',
@@ -56,10 +56,14 @@ export const AI_TOOLS: Record<string, ToolDefinition & { allowedRoles: Role[] }>
         requestedLimit: {
           type: 'number',
           description: 'Requested transfer limit amount in DH (must be strictly > 10000 and <= 100000).',
+          minimum: 10001,
+          maximum: 100000,
         },
         durationDays: {
           type: 'integer',
-          description: 'Duration of the increase in calendar days (1 to 7 days).',
+          description: 'Duration of the increase in calendar days (must be between 1 and 7 days).',
+          minimum: 1,
+          maximum: 7,
         },
         reason: {
           type: 'string',

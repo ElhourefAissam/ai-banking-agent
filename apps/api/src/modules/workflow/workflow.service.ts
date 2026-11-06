@@ -138,6 +138,23 @@ export class WorkflowService {
       });
     }
 
+    // Validate Amount bounds
+    const amt = Number(dto.requestedLimit);
+    if (amt <= BANKING_RULES.INITIAL_TRANSFER_LIMIT || amt > BANKING_RULES.MAX_REQUESTED_LIMIT) {
+      throw new BadRequestException({
+        code: 'INVALID_AMOUNT',
+        message: `Requested limit must be strictly between ${BANKING_RULES.INITIAL_TRANSFER_LIMIT} DH and ${BANKING_RULES.MAX_REQUESTED_LIMIT} DH.`,
+      });
+    }
+
+    // Validate Duration bounds
+    if (dto.durationDays < BANKING_RULES.MIN_DURATION_DAYS || dto.durationDays > BANKING_RULES.MAX_DURATION_DAYS) {
+      throw new BadRequestException({
+        code: 'INVALID_DURATION',
+        message: `Duration must be between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} days.`,
+      });
+    }
+
     const reference = await this.generateReference();
 
     const request = await this.prisma.limitRequest.create({

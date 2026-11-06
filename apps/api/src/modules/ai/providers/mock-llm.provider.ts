@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ILlmProvider, LlmMessage, LlmCompletionResponse } from '../interfaces/llm-provider.interface';
-import { ToolDefinition, ToolCallPayload } from '@proorga/shared-types';
+import { ToolDefinition, ToolCallPayload, BANKING_RULES } from '@proorga/shared-types';
 
 @Injectable()
 export class MockLlmProvider implements ILlmProvider {
@@ -52,6 +52,12 @@ export class MockLlmProvider implements ILlmProvider {
         }
 
         if (lastMessage.name === 'create_limit_request_draft') {
+          if (toolOutput.error) {
+            return {
+              content: `⚠️ **Impossible de préparer la demande** : ${toolOutput.error}\n\nVeuillez vérifier vos paramètres et vous assurer que le montant est strictement compris entre 10 001 DH et 100 000 DH et la durée entre 1 et 7 jours.`,
+            };
+          }
+
           const docNote = toolOutput.requestedLimit > 50000
             ? `\n> ⚠️ *Note réglementaire : Le montant demandé dépassant 50 000 DH, un justificatif (bon de commande, facture) sera obligatoire avant la soumission formelle.*`
             : '';
@@ -85,7 +91,7 @@ export class MockLlmProvider implements ILlmProvider {
 
     // 3. Draft Preparation Intent Detection (Amount, Duration, Reason)
     // Supports French, English, Arabic (e.g. 25000 DH, 25 000, 3 jours, days, etc.)
-    const amountMatch = userPrompt.match(/(\d[\d\s]{3,6})\s*(dh|dirham|mad|درهم)?/i);
+    const amountMatch = userPrompt.match(/(\d[\d\s]{2,7})\s*(dh|dirham|mad|درهم)?/i);
     const durationMatch = userPrompt.match(/(\d+)\s*(jour|jours|day|days|أيام|يوم)/i);
 
     if (
@@ -99,6 +105,53 @@ export class MockLlmProvider implements ILlmProvider {
     ) {
       const parsedAmount = parseInt(amountMatch[1].replace(/\s+/g, ''), 10);
       const parsedDuration = durationMatch ? parseInt(durationMatch[1], 10) : 3;
+
+      const isEnglish = /\b(want|increase|limit|ceiling|need|days?)\b/i.test(userPrompt);
+      const isArabic = /[\u0600-\u06FF]/.test(userPrompt);
+
+      // STRICT BUSINESS VALIDATION BEFORE PREPARING DRAFT OR ASKING TO SUBMIT:
+      // 1. Amount validation: strictly > 10,000 DH and <= 100,000 DH
+      if (
+        isNaN(parsedAmount) ||
+        parsedAmount <= BANKING_RULES.INITIAL_TRANSFER_LIMIT ||
+        parsedAmount > BANKING_RULES.MAX_REQUESTED_LIMIT
+      ) {
+        if (isEnglish) {
+          return {
+            content: `⚠️ **Invalid Requested Limit**:\nRequested limit must be strictly between ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')} DH and ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('en-US')} DH (your standard base limit is already ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')} DH).\n\nYour request for **${parsedAmount.toLocaleString('en-US')} DH** cannot be prepared. Please specify an amount strictly greater than ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('en-US')} DH and up to ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('en-US')} DH.`,
+          };
+        } else if (isArabic) {
+          return {
+            content: `⚠️ **المبلغ المطلوب غير مطابق للضوابط البنكية**:\nيجب أن يكون سقف التحويل المؤقت أكبر قطعا من ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} درهم وبحد أقصى ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('fr-FR')} درهم (سقفكم الحالي هو ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} درهم).\n\nطلبكم لمبلغ **${parsedAmount.toLocaleString('fr-FR')} درهم** لا يمكن إعداده. يرجى تحديد مبلغ بين 10,001 درهم و 100,000 درهم.`,
+          };
+        }
+
+        return {
+          content: `⚠️ **Montant non conforme aux règles bancaires** :\nLe montant d'un relèvement temporaire de plafond doit être **strictement supérieur à ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} DH** et **au maximum de ${BANKING_RULES.MAX_REQUESTED_LIMIT.toLocaleString('fr-FR')} DH** (votre plafond standard de base étant déjà de ${BANKING_RULES.INITIAL_TRANSFER_LIMIT.toLocaleString('fr-FR')} DH).\n\nVotre demande pour **${parsedAmount.toLocaleString('fr-FR')} DH** ne peut pas être enregistrée. Veuillez indiquer un montant valide compris entre 10 001 DH et 100 000 DH.`,
+        };
+      }
+
+      // 2. Duration validation: between 1 and 7 calendar days
+      if (
+        isNaN(parsedDuration) ||
+        parsedDuration < BANKING_RULES.MIN_DURATION_DAYS ||
+        parsedDuration > BANKING_RULES.MAX_DURATION_DAYS
+      ) {
+        if (isEnglish) {
+          return {
+            content: `⚠️ **Invalid Duration**:\nTemporary limit duration must be between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} calendar days.\n\nYour request for **${parsedDuration} days** cannot be prepared. Please specify a duration between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} days.`,
+          };
+        } else if (isArabic) {
+          return {
+            content: `⚠️ **المدة المطلوبة غير مطابقة للضوابط البنكية**:\nيجب أن تكون مدة الرفع المؤقت بين ${BANKING_RULES.MIN_DURATION_DAYS} و ${BANKING_RULES.MAX_DURATION_DAYS} أيام.\n\nطلبكم لمدة **${parsedDuration} أيام** لا يمكن إعداده. يرجى تحديد مدة بين 1 و 7 أيام.`,
+          };
+        }
+
+        return {
+          content: `⚠️ **Durée non conforme aux règles bancaires** :\nLa durée d'un relèvement temporaire de plafond doit être comprise **entre ${BANKING_RULES.MIN_DURATION_DAYS} et ${BANKING_RULES.MAX_DURATION_DAYS} jours** consécutifs.\n\nVotre demande pour **${parsedDuration} jours** ne peut pas être enregistrée. Veuillez indiquer une durée valide comprise entre 1 et 7 jours.`,
+        };
+      }
+
       let reason = 'Augmentation temporaire de plafond pour besoin personnel';
 
       if (lowerPrompt.includes('voyage') || lowerPrompt.includes('vacance')) {

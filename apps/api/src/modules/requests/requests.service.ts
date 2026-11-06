@@ -15,6 +15,7 @@ import {
   SubmitRequestInput,
   MotivatedDecisionInput,
   RespondComplementInput,
+  BANKING_RULES,
 } from '@proorga/shared-types';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -284,6 +285,26 @@ export class RequestsService {
 
     if (request.version !== dto.targetVersion) {
       throw new BadRequestException('Target version mismatch. Please reload.');
+    }
+
+    if (dto.requestedLimit !== undefined) {
+      const amt = Number(dto.requestedLimit);
+      if (amt <= BANKING_RULES.INITIAL_TRANSFER_LIMIT || amt > BANKING_RULES.MAX_REQUESTED_LIMIT) {
+        throw new BadRequestException({
+          code: 'INVALID_AMOUNT',
+          message: `Requested limit must be strictly between ${BANKING_RULES.INITIAL_TRANSFER_LIMIT} DH and ${BANKING_RULES.MAX_REQUESTED_LIMIT} DH.`,
+        });
+      }
+    }
+
+    if (dto.durationDays !== undefined) {
+      const dur = Number(dto.durationDays);
+      if (dur < BANKING_RULES.MIN_DURATION_DAYS || dur > BANKING_RULES.MAX_DURATION_DAYS) {
+        throw new BadRequestException({
+          code: 'INVALID_DURATION',
+          message: `Duration must be between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} days.`,
+        });
+      }
     }
 
     const nextVersion = request.version + 1;

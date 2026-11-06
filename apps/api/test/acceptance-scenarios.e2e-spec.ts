@@ -506,6 +506,39 @@ describe('PROORGA — 7 Official Technical Assignment Acceptance Scenarios', () 
       expect(res.body.confirmationMetadata).toBeUndefined();
     });
 
+    it('Refuses to prepare draft or ask for submission if requested limit is <= 10,000 DH or > 100,000 DH', async () => {
+      // 1. Below / equal base limit (10,000 DH)
+      const resUnder = await request(app.getHttpServer())
+        .post('/api/v1/ai/chat')
+        .set('Authorization', `Bearer ${client1Token}`)
+        .send({ message: 'want plafond in 10000 for 5days' });
+
+      expect(resUnder.status).toBe(201);
+      expect(resUnder.body.content).toContain('between 10,000 DH and 100,000 DH');
+      expect(resUnder.body.confirmationMetadata).toBeUndefined();
+
+      // 2. Above ceiling (120,000 DH)
+      const resOver = await request(app.getHttpServer())
+        .post('/api/v1/ai/chat')
+        .set('Authorization', `Bearer ${client1Token}`)
+        .send({ message: 'want plafond in 120000 for 3days' });
+
+      expect(resOver.status).toBe(201);
+      expect(resOver.body.content).toContain('between 10,000 DH and 100,000 DH');
+      expect(resOver.body.confirmationMetadata).toBeUndefined();
+    });
+
+    it('Refuses to prepare draft if requested duration is outside 1 to 7 calendar days', async () => {
+      const resInvalidDays = await request(app.getHttpServer())
+        .post('/api/v1/ai/chat')
+        .set('Authorization', `Bearer ${client1Token}`)
+        .send({ message: 'want plafond in 25000 for 12days' });
+
+      expect(resInvalidDays.status).toBe(201);
+      expect(resInvalidDays.body.content).toContain('between 1 and 7');
+      expect(resInvalidDays.body.confirmationMetadata).toBeUndefined();
+    });
+
     it('Manual web forms and banking workflow work even if AI is not used', async () => {
       // Clean request created and submitted purely through standard REST endpoints
       const draft = await request(app.getHttpServer())

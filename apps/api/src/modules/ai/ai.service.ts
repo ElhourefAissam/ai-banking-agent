@@ -20,6 +20,7 @@ import {
   AIMessageRole,
   ChatMessage,
   ConfirmationMetadata,
+  BANKING_RULES,
 } from '@proorga/shared-types';
 import { createHash } from 'crypto';
 
@@ -69,8 +70,8 @@ You assist customers regarding their bank accounts, current transfer limits, and
 
 CRITICAL INVARIANTS & SAFETY RULES:
 1. Base transfer limit is 10,000 DH.
-2. Temporary limit requests must be strictly > 10,000 DH and <= 100,000 DH.
-3. Duration must be between 1 and 7 calendar days.
+2. Temporary limit requests must be strictly > 10,000 DH and <= 100,000 DH. If the user requests an amount <= 10,000 DH or > 100,000 DH, you MUST IMMEDIATELY REFUSE and explain that temporary limits must be strictly between 10,001 DH and 100,000 DH. NEVER invoke create_limit_request_draft for amounts outside this range.
+3. Duration must be between 1 and 7 calendar days. If the user requests < 1 or > 7 days, you MUST IMMEDIATELY REFUSE and explain that duration must be between 1 and 7 days. NEVER invoke create_limit_request_draft for durations outside this range.
 4. A justification motive is mandatory.
 5. If the requested limit exceeds 50,000 DH, a fictional supporting document (e.g., bon de commande, facture) is MANDATORY before submission.
 6. Approval threshold: <= 30,000 DH is decided directly by the advisor. > 30,000 DH requires advisor recommendation and supervisor validation.
@@ -182,8 +183,8 @@ Current authenticated user: ${user.firstName} ${user.lastName} (${user.email}), 
         try {
           output = await this.executeTool(currentUser, toolCall.name, toolCall.arguments);
 
-          // If a draft was created, build confirmation metadata for the UI
-          if (toolCall.name === 'create_limit_request_draft' && output.id) {
+          // If a draft was created successfully, build confirmation metadata for the UI
+          if (toolCall.name === 'create_limit_request_draft' && output && output.id && !output.error) {
             const hash = createHash('sha256')
               .update(`${output.id}:${output.requestedLimit}:${output.durationDays}:${output.version}`)
               .digest('hex');
@@ -278,6 +279,31 @@ Current authenticated user: ${user.firstName} ${user.lastName} (${user.email}), 
     }
 
     if (toolName === 'create_limit_request_draft') {
+      const amt = Number(args.requestedLimit);
+      const dur = Number(args.durationDays);
+
+      if (
+        isNaN(amt) ||
+        amt <= BANKING_RULES.INITIAL_TRANSFER_LIMIT ||
+        amt > BANKING_RULES.MAX_REQUESTED_LIMIT
+      ) {
+        throw new BadRequestException({
+          code: 'INVALID_AMOUNT',
+          message: `Requested limit must be strictly between ${BANKING_RULES.INITIAL_TRANSFER_LIMIT} DH and ${BANKING_RULES.MAX_REQUESTED_LIMIT} DH.`,
+        });
+      }
+
+      if (
+        isNaN(dur) ||
+        dur < BANKING_RULES.MIN_DURATION_DAYS ||
+        dur > BANKING_RULES.MAX_DURATION_DAYS
+      ) {
+        throw new BadRequestException({
+          code: 'INVALID_DURATION',
+          message: `Duration must be between ${BANKING_RULES.MIN_DURATION_DAYS} and ${BANKING_RULES.MAX_DURATION_DAYS} days.`,
+        });
+      }
+
       let targetAccountId = args.accountId;
       if (!targetAccountId || targetAccountId === 'AUTO_RESOLVED_DEFAULT_ACCOUNT') {
         const accounts = await this.accountsService.getMyAccounts(currentUser.id);
@@ -287,8 +313,8 @@ Current authenticated user: ${user.firstName} ${user.lastName} (${user.email}), 
 
       return this.workflowService.createDraft(currentUser, {
         accountId: targetAccountId,
-        requestedLimit: Number(args.requestedLimit),
-        durationDays: Number(args.durationDays),
+        requestedLimit: amt,
+        durationDays: dur,
         reason: args.reason || 'Demande via assistant IA',
       });
     }
