@@ -242,5 +242,63 @@
       "LIMIT_CANCELLED": "Cancellation",
       "LIMIT_REJECTED": "Rejected"
     }
+  },
+  "auditActions": {
+    "DRAFT_CREATED": "Draft Created",
+    "REQUEST_SUBMITTED": "Request Submitted",
+    "submit_limit_request": "Submitted via AI Assistant",
+    "COMPLEMENT_REQUESTED": "Complement Requested",
+    "COMPLEMENT_RESUBMITTED": "Complement Resubmitted",
+    "APPROVAL_RECOMMENDED": "Approval Recommended",
+    "REQUEST_APPROVED": "Request Approved",
+    "REQUEST_REJECTED": "Request Rejected",
+    "REQUEST_CANCELLED": "Request Cancelled",
+    "LIMIT_ACTIVATED": "Limit Activated",
+    "LIMIT_EXPIRED_AND_RESTORED": "Limit Expired & Restored",
+    "LIMIT_RESTORED": "Standard Limit Restored",
+    "ACTIVATION_FAILED_TIMEOUT": "Activation Failed (Timeout)",
+    "USER_CONTACT_UPDATED": "Customer Contact Updated",
+    "CUSTOMER_PROFILE_STATUS_UPDATED": "Customer File Status Updated",
+    "KYC_DOCUMENT_REGULARIZED": "KYC File Regularized",
+    "DOCUMENT_UPLOADED": "Supporting Document Uploaded",
+    "DOCUMENT_VIEWED": "Document Viewed",
+    "CERTIFICATE_GENERATED": "Official Certificate Generated",
+    "WORKER_LIMIT_RESTORED_EXPIRED": "Automatic Limit Restoration (Worker)",
+    "SUBMITTED": "Submitted",
+    "UNDER_REVIEW": "Under Review",
+    "PENDING_SUPERVISOR": "Escalated to Supervisor",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "CANCELLED": "Cancelled",
+    "searchPlaceholder": "Search by action, actor email, entity type...",
+    "observationPeriod": "Observation period:",
+    "systemActor": "System / Automatic",
+    "loading": "Loading audit events...",
+    "empty": "No audit events found.",
+    "modalTitle": "Audit Event Metadata",
+    "modalClose": "Close",
+    "csvExport": "Export CSV",
+    "refresh": "Refresh",
+    "categories": {
+      "ALL": "All actions",
+      "DECISION": "DECISION",
+      "CREATION": "CREATION",
+      "ACTIVATION": "ACTIVATION",
+      "ANNULATION": "CANCELLATION"
+    },
+    "periods": {
+      "all": "All",
+      "today": "Today",
+      "last7Days": "Last 7 days"
+    },
+    "columns": {
+      "dateTime": "Date & Time (UTC)",
+      "action": "Action",
+      "actor": "Actor",
+      "role": "Role",
+      "targetEntity": "Target Entity",
+      "version": "Version",
+      "details": "Details"
+    }
   }
 }

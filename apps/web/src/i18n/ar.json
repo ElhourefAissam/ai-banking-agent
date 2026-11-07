@@ -242,5 +242,63 @@
       "LIMIT_CANCELLED": "إلغاء الطلب",
       "LIMIT_REJECTED": "رفض الطلب"
     }
+  },
+  "auditActions": {
+    "DRAFT_CREATED": "إنشاء المسودة",
+    "REQUEST_SUBMITTED": "إيداع رسمي للطلب",
+    "submit_limit_request": "إيداع عبر المساعد الذكي",
+    "COMPLEMENT_REQUESTED": "طلب وثائق تكميلية",
+    "COMPLEMENT_RESUBMITTED": "تقديم الوثائق وإعادة الإرسال",
+    "APPROVAL_RECOMMENDED": "إحالة توصية بالموافقة",
+    "REQUEST_APPROVED": "الموافقة على الطلب",
+    "REQUEST_REJECTED": "رفض الطلب",
+    "REQUEST_CANCELLED": "إلغاء الطلب",
+    "LIMIT_ACTIVATED": "التفعيل الفعلي للسقف",
+    "LIMIT_EXPIRED_AND_RESTORED": "انتهاء الصلاحية واستعادة السقف الأصلي",
+    "LIMIT_RESTORED": "استعادة السقف المعياري",
+    "ACTIVATION_FAILED_TIMEOUT": "فشل التفعيل (انتهاء المهلة)",
+    "USER_CONTACT_UPDATED": "تحديث بيانات الاتصال",
+    "CUSTOMER_PROFILE_STATUS_UPDATED": "تعديل حالة الملف البنكي",
+    "KYC_DOCUMENT_REGULARIZED": "تسوية وثائق الملف البنكي (KYC)",
+    "DOCUMENT_UPLOADED": "تحميل وثيقة إثبات",
+    "DOCUMENT_VIEWED": "معاينة الوثيقة",
+    "CERTIFICATE_GENERATED": "إصدار الشهادة الرسمية",
+    "WORKER_LIMIT_RESTORED_EXPIRED": "استعادة السقف تلقائياً (الخادم الخلفي)",
+    "SUBMITTED": "تم الإيداع",
+    "UNDER_REVIEW": "قيد المراجعة",
+    "PENDING_SUPERVISOR": "محال إلى المشرف",
+    "APPROVED": "معتمد",
+    "REJECTED": "مرفوض",
+    "CANCELLED": "ملغى",
+    "searchPlaceholder": "البحث حسب العملية، البريد الإلكتروني للمتدخل، نوع الكيان...",
+    "observationPeriod": "فترة الملاحظة:",
+    "systemActor": "النظام / آلي",
+    "loading": "جاري تحميل سجلات التدقيق...",
+    "empty": "لم يتم العثور على أي أحداث تدقيق.",
+    "modalTitle": "بيانات وصفية لحدث التدقيق",
+    "modalClose": "إغلاق",
+    "csvExport": "تصدير CSV",
+    "refresh": "تحديث",
+    "categories": {
+      "ALL": "جميع العمليات",
+      "DECISION": "قرار",
+      "CREATION": "إنشاء",
+      "ACTIVATION": "تفعيل",
+      "ANNULATION": "إلغاء"
+    },
+    "periods": {
+      "all": "الكل",
+      "today": "اليوم",
+      "last7Days": "آخر 7 أيام"
+    },
+    "columns": {
+      "dateTime": "التاريخ والوقت (UTC)",
+      "action": "الإجراء / العملية",
+      "actor": "المتدخل",
+      "role": "الدور",
+      "targetEntity": "الجهة المستهدفة",
+      "version": "الإصدار",
+      "details": "التفاصيل"
+    }
   }
 }

@@ -242,5 +242,63 @@
       "LIMIT_CANCELLED": "Annulation",
       "LIMIT_REJECTED": "Refus"
     }
+  },
+  "auditActions": {
+    "DRAFT_CREATED": "Création du brouillon",
+    "REQUEST_SUBMITTED": "Dépôt formel de la demande",
+    "submit_limit_request": "Dépôt via l'assistant IA",
+    "COMPLEMENT_REQUESTED": "Demande de pièces complémentaires",
+    "COMPLEMENT_RESUBMITTED": "Complément fourni & re-soumission",
+    "APPROVAL_RECOMMENDED": "Recommandation d'approbation",
+    "REQUEST_APPROVED": "Demande approuvée",
+    "REQUEST_REJECTED": "Demande rejetée",
+    "REQUEST_CANCELLED": "Demande annulée",
+    "LIMIT_ACTIVATED": "Activation effective du plafond",
+    "LIMIT_EXPIRED_AND_RESTORED": "Expiration et rétablissement du plafond",
+    "LIMIT_RESTORED": "Rétablissement du plafond standard",
+    "ACTIVATION_FAILED_TIMEOUT": "Échec d'activation (Délai dépassé)",
+    "USER_CONTACT_UPDATED": "Mise à jour des coordonnées client",
+    "CUSTOMER_PROFILE_STATUS_UPDATED": "Statut du dossier client modifié",
+    "KYC_DOCUMENT_REGULARIZED": "Régularisation du dossier KYC",
+    "DOCUMENT_UPLOADED": "Pièce justificative téléversée",
+    "DOCUMENT_VIEWED": "Consultation de document",
+    "CERTIFICATE_GENERATED": "Génération de l'attestation officielle",
+    "WORKER_LIMIT_RESTORED_EXPIRED": "Rétablissement automatique du plafond (Worker)",
+    "SUBMITTED": "Demande soumise",
+    "UNDER_REVIEW": "Dossier sous examen",
+    "PENDING_SUPERVISOR": "Escaladé au superviseur",
+    "APPROVED": "Validé",
+    "REJECTED": "Rejeté",
+    "CANCELLED": "Annulé",
+    "searchPlaceholder": "Rechercher par action, email de l'acteur, type d'entité...",
+    "observationPeriod": "Période d'observation :",
+    "systemActor": "Système / Automatique",
+    "loading": "Chargement des événements d'audit...",
+    "empty": "Aucun événement d'audit trouvé.",
+    "modalTitle": "Métadonnées de l'événement d'audit",
+    "modalClose": "Fermer",
+    "csvExport": "Exporter CSV",
+    "refresh": "Actualiser",
+    "categories": {
+      "ALL": "Toutes les actions",
+      "DECISION": "DÉCISION",
+      "CREATION": "CRÉATION",
+      "ACTIVATION": "ACTIVATION",
+      "ANNULATION": "ANNULATION"
+    },
+    "periods": {
+      "all": "Tout",
+      "today": "Aujourd'hui",
+      "last7Days": "7 derniers jours"
+    },
+    "columns": {
+      "dateTime": "Date & Heure (UTC)",
+      "action": "Action",
+      "actor": "Acteur",
+      "role": "Rôle",
+      "targetEntity": "Entité ciblée",
+      "version": "Version",
+      "details": "Détails"
+    }
   }
 }

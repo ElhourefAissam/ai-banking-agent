@@ -36,6 +36,12 @@ export const AuditView: React.FC = () => {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
 
+  const getActionLabel = (action: string): string => {
+    const key = `auditActions.${action}`;
+    const translated = t(key);
+    return translated !== key ? translated : action;
+  };
+
   const fetchLogs = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -134,13 +140,25 @@ export const AuditView: React.FC = () => {
     exportToCsv(
       `piste_audit_${new Date().toISOString().split('T')[0]}`,
       [
-        { key: 'createdAt', label: 'Date & Heure', transform: (val) => formatDate(val) },
-        { key: 'action', label: 'Action' },
-        { key: 'actorEmail', label: 'Acteur', transform: (val) => val || 'Système / Automatique' },
-        { key: 'actorRole', label: 'Rôle' },
-        { key: 'entityType', label: 'Entité Ciblée' },
+        {
+          key: 'createdAt',
+          label: t('auditActions.columns.dateTime') || 'Date & Heure',
+          transform: (val) => formatDate(val),
+        },
+        {
+          key: 'action',
+          label: t('auditActions.columns.action') || 'Action',
+          transform: (val) => `${getActionLabel(val)} [${val}]`,
+        },
+        {
+          key: 'actorEmail',
+          label: t('auditActions.columns.actor') || 'Acteur',
+          transform: (val) => val || t('auditActions.systemActor') || 'Système / Automatique',
+        },
+        { key: 'actorRole', label: t('auditActions.columns.role') || 'Rôle' },
+        { key: 'entityType', label: t('auditActions.columns.targetEntity') || 'Entité Ciblée' },
         { key: 'entityId', label: 'ID Entité' },
-        { key: 'targetVersion', label: 'Version' },
+        { key: 'targetVersion', label: t('auditActions.columns.version') || 'Version' },
         { key: 'ipAddress', label: 'Adresse IP' },
         {
           key: 'metadata',
@@ -175,11 +193,11 @@ export const AuditView: React.FC = () => {
             className="border-slate-300 text-slate-700 hover:bg-slate-50"
           >
             <Download className="w-3.5 h-3.5 me-1.5 text-brand-600" />
-            Exporter CSV
+            {t('auditActions.csvExport') || 'Exporter CSV'}
           </Button>
           <Button size="sm" variant="outline" onClick={fetchLogs} isLoading={isLoading}>
             <RefreshCw className="w-3.5 h-3.5 me-1.5" />
-            Actualiser
+            {t('auditActions.refresh') || 'Actualiser'}
           </Button>
         </div>
       </div>
@@ -196,7 +214,7 @@ export const AuditView: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
             <Calendar className="w-4 h-4 text-brand-700" />
-            <span>Période d'observation :</span>
+            <span>{t('auditActions.observationPeriod') || "Période d'observation :"}</span>
           </div>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
             <button
@@ -208,7 +226,7 @@ export const AuditView: React.FC = () => {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              Tout ({logs.length})
+              {t('auditActions.periods.all') || 'Tout'} ({logs.length})
             </button>
             <button
               type="button"
@@ -220,7 +238,7 @@ export const AuditView: React.FC = () => {
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Aujourd'hui</span>
+              <span>{t('auditActions.periods.today') || "Aujourd'hui"}</span>
             </button>
             <button
               type="button"
@@ -232,7 +250,7 @@ export const AuditView: React.FC = () => {
               }`}
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span>7 derniers jours</span>
+              <span>{t('auditActions.periods.last7Days') || '7 derniers jours'}</span>
             </button>
           </div>
         </div>
@@ -248,7 +266,7 @@ export const AuditView: React.FC = () => {
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'
             }`}
           >
-            Toutes ({counts.all})
+            {t('auditActions.categories.ALL') || 'Toutes'} ({counts.all})
           </button>
 
           <button
@@ -261,7 +279,7 @@ export const AuditView: React.FC = () => {
             }`}
           >
             <Shield className="w-3.5 h-3.5 text-purple-600" />
-            <span>DÉCISION</span>
+            <span>{t('auditActions.categories.DECISION') || 'DÉCISION'}</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-purple-100 text-purple-900">
               {counts.decision}
             </span>
@@ -277,7 +295,7 @@ export const AuditView: React.FC = () => {
             }`}
           >
             <PlusCircle className="w-3.5 h-3.5 text-blue-600" />
-            <span>CRÉATION</span>
+            <span>{t('auditActions.categories.CREATION') || 'CRÉATION'}</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-blue-100 text-blue-900">
               {counts.creation}
             </span>
@@ -293,7 +311,7 @@ export const AuditView: React.FC = () => {
             }`}
           >
             <Zap className="w-3.5 h-3.5 text-emerald-600" />
-            <span>ACTIVATION</span>
+            <span>{t('auditActions.categories.ACTIVATION') || 'ACTIVATION'}</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-emerald-100 text-emerald-900">
               {counts.activation}
             </span>
@@ -309,7 +327,7 @@ export const AuditView: React.FC = () => {
             }`}
           >
             <XCircle className="w-3.5 h-3.5 text-rose-600" />
-            <span>ANNULATION</span>
+            <span>{t('auditActions.categories.ANNULATION') || 'ANNULATION'}</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-rose-100 text-rose-900">
               {counts.annulation}
             </span>
@@ -323,7 +341,7 @@ export const AuditView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher par action, email de l'acteur, type d'entité..."
+            placeholder={t('auditActions.searchPlaceholder') || "Rechercher par action, email de l'acteur, type d'entité..."}
             className="w-full ps-9 pe-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
@@ -334,20 +352,22 @@ export const AuditView: React.FC = () => {
           <table className="w-full text-start text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4 text-start">Date & Heure (UTC)</th>
-                <th className="py-3 px-4 text-start">Action</th>
-                <th className="py-3 px-4 text-start">Acteur</th>
-                <th className="py-3 px-4 text-start">Rôle</th>
-                <th className="py-3 px-4 text-start">Entité ciblée</th>
-                <th className="py-3 px-4 text-start">Version</th>
-                <th className="py-3 px-4 text-end">Détails</th>
+                <th className="py-3 px-4 text-start">{t('auditActions.columns.dateTime') || 'Date & Heure (UTC)'}</th>
+                <th className="py-3 px-4 text-start">{t('auditActions.columns.action') || 'Action'}</th>
+                <th className="py-3 px-4 text-start">{t('auditActions.columns.actor') || 'Acteur'}</th>
+                <th className="py-3 px-4 text-start">{t('auditActions.columns.role') || 'Rôle'}</th>
+                <th className="py-3 px-4 text-start">{t('auditActions.columns.targetEntity') || 'Entité ciblée'}</th>
+                <th className="py-3 px-4 text-start">{t('auditActions.columns.version') || 'Version'}</th>
+                <th className="py-3 px-4 text-end">{t('auditActions.columns.details') || 'Détails'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredLogs.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400 italic">
-                    {isLoading ? 'Chargement des événements d’audit...' : 'Aucun événement trouvé.'}
+                    {isLoading
+                      ? t('auditActions.loading') || 'Chargement des événements d’audit...'
+                      : t('auditActions.empty') || 'Aucun événement trouvé.'}
                   </td>
                 </tr>
               ) : (
@@ -371,16 +391,22 @@ export const AuditView: React.FC = () => {
                             : 'bg-slate-50 text-slate-800 border-slate-200';
 
                         return (
-                          <span
-                            className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded border ${badgeStyle}`}
-                          >
-                            {log.action}
-                          </span>
+                          <div className="flex flex-col gap-0.5">
+                            <span
+                              className={`font-semibold text-xs px-2.5 py-0.5 rounded-lg border w-fit ${badgeStyle}`}
+                              title={log.action}
+                            >
+                              {getActionLabel(log.action)}
+                            </span>
+                            <span className="font-mono text-[10px] text-slate-400">
+                              {log.action}
+                            </span>
+                          </div>
                         );
                       })()}
                     </td>
                     <td className="py-3 px-4 font-semibold text-slate-800">
-                      {log.actorEmail || 'Système / Automatique'}
+                      {log.actorEmail || t('auditActions.systemActor') || 'Système / Automatique'}
                     </td>
                     <td className="py-3 px-4">
                       <span className="text-[10px] font-semibold text-slate-600">
@@ -417,13 +443,15 @@ export const AuditView: React.FC = () => {
       {selectedDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-4">
-            <h3 className="font-bold text-slate-900 text-sm">Métadonnées de l’événement d'audit</h3>
+            <h3 className="font-bold text-slate-900 text-sm">
+              {t('auditActions.modalTitle') || "Métadonnées de l’événement d'audit"}
+            </h3>
             <pre className="p-3 bg-slate-950 text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto max-h-80">
               {JSON.stringify(selectedDetails, null, 2)}
             </pre>
             <div className="flex justify-end">
               <Button size="sm" variant="outline" onClick={() => setSelectedDetails(null)}>
-                Fermer
+                {t('auditActions.modalClose') || 'Fermer'}
               </Button>
             </div>
           </div>
