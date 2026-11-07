@@ -13,9 +13,15 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   // Enable CORS
-  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3002';
+  const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
-    origin: [corsOrigin, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+    origin: (origin, callback) => {
+      // Allow server-to-server, curl, Next.js proxy, or matching origins
+      if (!origin || !corsOrigin || corsOrigin === '*' || origin === corsOrigin) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-Id'],

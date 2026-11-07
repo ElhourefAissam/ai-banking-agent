@@ -61,7 +61,8 @@ services:
     environment:
       NODE_ENV: production
       WEB_PORT: 3002
-      NEXT_PUBLIC_API_URL: http://localhost:4001/api/v1
+      INTERNAL_API_URL: http://api:4001
+      NEXT_PUBLIC_API_URL: /api/v1
     ports:
       - "${WEB_PORT:-3002}:3002"
     depends_on:
