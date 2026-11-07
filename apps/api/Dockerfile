@@ -1,5 +1,7 @@
 FROM node:22-alpine AS builder
 
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 RUN npm install -g pnpm@12.3.4
@@ -19,6 +21,8 @@ RUN pnpm exec prisma generate
 RUN pnpm run build
 
 FROM node:22-alpine AS runner
+
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
