@@ -4,12 +4,12 @@ WORKDIR /app
 
 RUN npm install -g pnpm@12.3.4
 
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
 RUN pnpm approve-builds --all
-RUN pnpm install --frozen-lockfile=false
+RUN pnpm install --no-frozen-lockfile
 
 RUN pnpm --filter @proorga/shared-types run build
 RUN pnpm --filter @proorga/shared-validation run build
