@@ -8,6 +8,7 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 COPY packages/ ./packages/
 COPY apps/web/ ./apps/web/
 
+RUN mkdir -p /app/apps/web/public
 RUN pnpm approve-builds --all
 RUN pnpm install --no-frozen-lockfile
 
