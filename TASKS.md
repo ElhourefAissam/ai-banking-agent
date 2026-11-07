@@ -229,3 +229,17 @@
   - [x] Recherche instantanée par référence de dossier (`REQ-2026-XXXX`), nom de client, compte bancaire.
   - [x] Raccourcis de navigation directe vers `/dashboard`, `/requests`, `/advisor`, `/supervisor`, `/audit`, `/ai`.
   - [x] Bascule rapide de rôle et d'utilisateur de test directement depuis la palette.
+
+---
+
+## Phase 15: Account Activity Ledger & Advanced Audit Intelligence
+- [x] **15.1: 💳 Historique Intégral des Opérations & Mouvements du Compte (`AccountOperationsLedger`)**:
+  - [x] Endpoint backend `GET /api/v1/accounts/:id/operations` agrégeant en direct toutes les opérations (virements émis, virements reçus, prélèvements, dépôts de demandes, décisions d'octroi, activations, rétablissements automatiques).
+  - [x] Interface client interactive sur `/dashboard` avec sélection multi-comptes, badges typologiques et recherche instantanée.
+  - [x] Liens cliquables vers les dossiers (`REQ-2026-XXXX`) ouvrant directement le tiroir d'instructions.
+  - [x] Export du relevé d'opérations en CSV UTF-8 BOM compatible Excel.
+- [x] **15.2: 🔎 Filtre par Plage de Dates et Types d'Actions dans la Piste d'Audit (`AuditView`)**:
+  - [x] Sélecteur de période d'observation : "Tout", "Aujourd'hui", "7 derniers jours".
+  - [x] Filtres rapides par catégorie d'actions avec compteurs dynamiques : "DÉCISION", "CRÉATION", "ACTIVATION", "ANNULATION".
+  - [x] Badges visuels colorés par catégorie dans le tableau d'audit.
+  - [x] Export CSV filtré respectant les critères de période et de catégorie sélectionnés.

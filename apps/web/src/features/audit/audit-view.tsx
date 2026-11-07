@@ -5,8 +5,26 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
-import { Activity, Shield, RefreshCw, Search, Code, Download } from 'lucide-react';
+import {
+  Activity,
+  Shield,
+  RefreshCw,
+  Search,
+  Code,
+  Download,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  PlusCircle,
+  Zap,
+  XCircle,
+  Filter,
+} from 'lucide-react';
 import { exportToCsv } from '@/lib/export-csv';
+
+type PeriodFilter = 'ALL' | 'TODAY' | '7_DAYS';
+type CategoryFilter = 'ALL' | 'DECISION' | 'CREATION' | 'ACTIVATION' | 'ANNULATION';
 
 export const AuditView: React.FC = () => {
   const { t, formatDate } = useTranslation();
@@ -15,6 +33,8 @@ export const AuditView: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDetails, setSelectedDetails] = useState<any | null>(null);
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('ALL');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
 
   const fetchLogs = async () => {
     setIsLoading(true);
@@ -36,15 +56,79 @@ export const AuditView: React.FC = () => {
     fetchLogs();
   }, []);
 
+  const getActionCategory = (
+    action: string
+  ): 'DECISION' | 'CREATION' | 'ACTIVATION' | 'ANNULATION' | 'OTHER' => {
+    const act = (action || '').toUpperCase();
+    if (
+      act.includes('APPROV') ||
+      act.includes('REJECT') ||
+      act.includes('RECOMMEND') ||
+      act.includes('COMPLEMENT') ||
+      act.includes('DECISION')
+    ) {
+      return 'DECISION';
+    }
+    if (act.includes('DRAFT') || act.includes('SUBMIT') || act.includes('CREATE')) {
+      return 'CREATION';
+    }
+    if (
+      act.includes('ACTIVAT') ||
+      act.includes('RESTORE') ||
+      act.includes('EXPIRE')
+    ) {
+      return 'ACTIVATION';
+    }
+    if (act.includes('CANCEL') || act.includes('ANNUL')) {
+      return 'ANNULATION';
+    }
+    return 'OTHER';
+  };
+
+  const matchesPeriod = (createdAt: string, period: PeriodFilter): boolean => {
+    if (period === 'ALL') return true;
+    const itemDate = new Date(createdAt);
+    const now = new Date();
+    if (period === 'TODAY') {
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return itemDate >= startOfToday;
+    }
+    if (period === '7_DAYS') {
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return itemDate >= sevenDaysAgo;
+    }
+    return true;
+  };
+
+  const matchesCategory = (action: string, category: CategoryFilter): boolean => {
+    if (category === 'ALL') return true;
+    return getActionCategory(action) === category;
+  };
+
   const filteredLogs = logs.filter((log) => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       log.action.toLowerCase().includes(q) ||
       (log.actorEmail && log.actorEmail.toLowerCase().includes(q)) ||
       log.entityType.toLowerCase().includes(q) ||
-      log.entityId.toLowerCase().includes(q)
+      log.entityId.toLowerCase().includes(q);
+
+    return (
+      matchesSearch &&
+      matchesPeriod(log.createdAt, periodFilter) &&
+      matchesCategory(log.action, categoryFilter)
     );
   });
+
+  // Calculate dynamic counts based on selected period
+  const logsInPeriod = logs.filter((l) => matchesPeriod(l.createdAt, periodFilter));
+  const counts = {
+    all: logsInPeriod.length,
+    decision: logsInPeriod.filter((l) => getActionCategory(l.action) === 'DECISION').length,
+    creation: logsInPeriod.filter((l) => getActionCategory(l.action) === 'CREATION').length,
+    activation: logsInPeriod.filter((l) => getActionCategory(l.action) === 'ACTIVATION').length,
+    annulation: logsInPeriod.filter((l) => getActionCategory(l.action) === 'ANNULATION').length,
+  };
 
   const handleExportCsv = () => {
     exportToCsv(
@@ -106,16 +190,143 @@ export const AuditView: React.FC = () => {
         </div>
       )}
 
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Rechercher par action, email de l'acteur, type d'entité..."
-          className="w-full ps-9 pe-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        />
+      {/* Filter Toolbar: Period Selector & Action Category Pills */}
+      <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+        {/* Row 1: Period Selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+            <Calendar className="w-4 h-4 text-brand-700" />
+            <span>Période d'observation :</span>
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <button
+              type="button"
+              onClick={() => setPeriodFilter('ALL')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                periodFilter === 'ALL'
+                  ? 'bg-slate-900 text-white shadow-2xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Tout ({logs.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriodFilter('TODAY')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                periodFilter === 'TODAY'
+                  ? 'bg-brand-900 text-white shadow-2xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Aujourd'hui</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriodFilter('7_DAYS')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                periodFilter === '7_DAYS'
+                  ? 'bg-brand-900 text-white shadow-2xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>7 derniers jours</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Action Category Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('ALL')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${
+              categoryFilter === 'ALL'
+                ? 'bg-brand-900 text-white shadow-2xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60'
+            }`}
+          >
+            Toutes ({counts.all})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('DECISION')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              categoryFilter === 'DECISION'
+                ? 'bg-purple-700 text-white shadow-2xs'
+                : 'bg-white text-purple-900 hover:bg-purple-50 border border-purple-200'
+            }`}
+          >
+            <Shield className="w-3.5 h-3.5 text-purple-600" />
+            <span>DÉCISION</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-purple-100 text-purple-900">
+              {counts.decision}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('CREATION')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              categoryFilter === 'CREATION'
+                ? 'bg-blue-700 text-white shadow-2xs'
+                : 'bg-white text-blue-900 hover:bg-blue-50 border border-blue-200'
+            }`}
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-blue-600" />
+            <span>CRÉATION</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-blue-100 text-blue-900">
+              {counts.creation}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('ACTIVATION')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              categoryFilter === 'ACTIVATION'
+                ? 'bg-emerald-700 text-white shadow-2xs'
+                : 'bg-white text-emerald-900 hover:bg-emerald-50 border border-emerald-200'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-emerald-600" />
+            <span>ACTIVATION</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-emerald-100 text-emerald-900">
+              {counts.activation}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('ANNULATION')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              categoryFilter === 'ANNULATION'
+                ? 'bg-rose-700 text-white shadow-2xs'
+                : 'bg-white text-rose-900 hover:bg-rose-50 border border-rose-200'
+            }`}
+          >
+            <XCircle className="w-3.5 h-3.5 text-rose-600" />
+            <span>ANNULATION</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-rose-100 text-rose-900">
+              {counts.annulation}
+            </span>
+          </button>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative pt-1">
+          <Search className="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher par action, email de l'acteur, type d'entité..."
+            className="w-full ps-9 pe-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
       </div>
 
       <Card className="p-0 overflow-hidden">
@@ -146,9 +357,27 @@ export const AuditView: React.FC = () => {
                       {formatDate(log.createdAt)}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-mono font-bold text-brand-900 text-[11px] px-2 py-0.5 rounded bg-brand-50 border border-brand-200">
-                        {log.action}
-                      </span>
+                      {(() => {
+                        const cat = getActionCategory(log.action);
+                        const badgeStyle =
+                          cat === 'DECISION'
+                            ? 'bg-purple-50 text-purple-900 border-purple-200'
+                            : cat === 'CREATION'
+                            ? 'bg-blue-50 text-blue-900 border-blue-200'
+                            : cat === 'ACTIVATION'
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                            : cat === 'ANNULATION'
+                            ? 'bg-rose-50 text-rose-900 border-rose-200'
+                            : 'bg-slate-50 text-slate-800 border-slate-200';
+
+                        return (
+                          <span
+                            className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded border ${badgeStyle}`}
+                          >
+                            {log.action}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="py-3 px-4 font-semibold text-slate-800">
                       {log.actorEmail || 'Système / Automatique'}

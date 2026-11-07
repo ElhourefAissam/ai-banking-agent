@@ -29,4 +29,12 @@ export class AccountsController {
   ) {
     return this.accountsService.checkEligibility(id, user);
   }
+
+  @Get(':id/operations')
+  async getAccountOperations(
+    @Param('id') id: string,
+    @CurrentUser() user: UserSummary,
+  ) {
+    return this.accountsService.getAccountOperations(id, user);
+  }
 }

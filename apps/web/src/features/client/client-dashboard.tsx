@@ -5,6 +5,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/badge';
 import { RegulatorySimulator } from '@/components/ui/regulatory-simulator';
+import { AccountOperationsLedger } from './account-operations-ledger';
 import { useTranslation } from '@/i18n';
 import { BankAccountSummary, LimitRequestDetail, CustomerFileStatus } from '@proorga/shared-types';
 import {
@@ -36,6 +37,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const { t, formatCurrency, formatDate } = useTranslation();
   const [simAmount, setSimAmount] = useState<number>(35000);
   const [simDuration, setSimDuration] = useState<number>(3);
+  const [selectedAccountForLedger, setSelectedAccountForLedger] = useState<string>(
+    accounts[0]?.id || ''
+  );
 
   const isFileIncomplete = customerProfile?.fileStatus === CustomerFileStatus.INCOMPLETE;
   const activeRequest = requests.find(
@@ -138,8 +142,18 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           {accounts.map((acc) => {
             const hasTemporaryLimit = Number(acc.currentTransferLimit) > Number(acc.initialTransferLimit);
 
+            const isSelected = selectedAccountForLedger === acc.id;
+
             return (
-              <Card key={acc.id} className="relative overflow-hidden">
+              <Card
+                key={acc.id}
+                onClick={() => setSelectedAccountForLedger(acc.id)}
+                className={`relative overflow-hidden cursor-pointer transition-all ${
+                  isSelected
+                    ? 'ring-2 ring-brand-800 shadow-sm'
+                    : 'hover:border-brand-300'
+                }`}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
@@ -193,6 +207,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           })}
         </div>
       </div>
+
+      {/* Account Operations & Movements Ledger */}
+      <AccountOperationsLedger
+        accounts={accounts}
+        selectedAccountId={selectedAccountForLedger}
+        onViewRequest={onViewRequest}
+      />
 
       {/* Feature 4: Interactive Eligibility & Regulatory Timeline Simulator */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4">

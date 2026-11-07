@@ -15,6 +15,7 @@ import {
   UserProfileDetail,
   UpdateProfileInput,
   NotificationItem,
+  AccountOperation,
 } from '@proorga/shared-types';
 
 const API_BASE_URL =
@@ -98,6 +99,10 @@ export const api = {
 
   async checkEligibility(accountId: string) {
     return request<EligibilityResult>(`/accounts/${accountId}/eligibility`);
+  },
+
+  async getAccountOperations(accountId: string) {
+    return request<AccountOperation[]>(`/accounts/${accountId}/operations`);
   },
 
   async getMyProfile() {

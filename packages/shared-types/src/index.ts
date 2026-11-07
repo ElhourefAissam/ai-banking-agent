@@ -112,6 +112,40 @@ export interface BankAccountSummary {
   activeLimitExpiry?: string | null;
 }
 
+export type AccountOperationCategory = 'FINANCIAL' | 'LIMIT';
+
+export type AccountOperationType =
+  | 'TRANSFER_DEBIT'
+  | 'TRANSFER_CREDIT'
+  | 'DIRECT_DEBIT'
+  | 'LIMIT_INCREASE_REQUESTED'
+  | 'LIMIT_RECOMMENDED'
+  | 'LIMIT_COMPLEMENT_REQUESTED'
+  | 'LIMIT_APPROVED'
+  | 'LIMIT_ACTIVATED'
+  | 'LIMIT_EXPIRED_RESTORED'
+  | 'LIMIT_CANCELLED'
+  | 'LIMIT_REJECTED';
+
+export interface AccountOperation {
+  id: string;
+  accountId: string;
+  accountNumber: string;
+  category: AccountOperationCategory;
+  type: AccountOperationType;
+  label: string;
+  description: string;
+  amount?: number | null;
+  currency: string;
+  isDebit?: boolean;
+  limitBefore?: number;
+  limitAfter?: number;
+  balanceAfter?: number;
+  reference?: string | null;
+  date: string;
+  status: 'EXECUTED' | 'ACTIVE' | 'EXPIRED' | 'REJECTED' | 'CANCELLED';
+}
+
 export interface RequestDocumentSummary {
   id: string;
   requestId: string;
