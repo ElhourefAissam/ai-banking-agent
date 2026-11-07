@@ -44,8 +44,16 @@ services:
       JWT_SECRET: ${JWT_SECRET:-proorga_banking_ultra_secure_jwt_secret_key_minimum_32_characters_for_production}
       CORS_ORIGIN: http://localhost:3002
       AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      SIMULATE_FAILURE: ${SIMULATE_FAILURE:-NONE}
+      SIMULATOR_DELAY_MS: ${SIMULATOR_DELAY_MS:-150}
     ports:
       - "${API_PORT:-4001}:4001"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,3 +81,5 @@ volumes:
     name: proorga_postgres_data
   redis_data:
     name: proorga_redis_data
+  uploads_data:
+    name: proorga_uploads_data

@@ -184,22 +184,87 @@ The platform includes a realistic, pre-seeded dataset. All passwords are set to 
 
 ---
 
-## 5. Quick Start Instructions
+## 5. Quick Start & Docker Deployment
 
 ### Prerequisites
-- Node.js >= 20 (Node 22 or 24 recommended)
-- `pnpm` >= 9 (or npm)
-- Docker & Docker Compose
+- **For Docker Deployment (Recommended):** [Docker Desktop](https://www.docker.com/) or Docker Engine with Docker Compose v2+ installed.
+- **For Local Development:** Node.js >= 20 (Node 22 LTS recommended) and `pnpm` >= 9.
 
-### Option A: Local Development Setup (Recommended)
+---
 
-1. **Clone & install dependencies:**
+### Option A: Complete Docker Compose Stack (Recommended for Evaluation & Production)
+
+This option launches the complete application stack (**PostgreSQL 16**, **Redis 7**, **NestJS API**, and **Next.js Web Frontend**) in isolated, production-grade Docker containers. It requires **zero host dependencies** (no local Node.js or PostgreSQL required).
+
+#### 1. Clone & Configure Environment
+```bash
+git clone git@github.com:ElhourefAissam/ai-banking-agent.git
+cd ai-banking-agent
+
+# Create environment file from template
+cp .env.example .env
+```
+
+#### 2. Start All Services with Docker Compose
+```bash
+docker compose up -d --build
+# Or using pnpm shortcut:
+pnpm docker:build
+```
+
+#### What Happens Automatically on Startup:
+1. **PostgreSQL 16** starts on host port `5434` with an active healthcheck (`pg_isready`).
+2. **Redis 7** starts on host port `6380` with an active healthcheck (`redis-cli ping`).
+3. **NestJS API** waits for database and redis readiness, then executes the built-in entrypoint:
+   - **Prisma Migrations:** Automatically runs `prisma migrate deploy` to ensure the schema is current.
+   - **Auto-Seed Detection:** Automatically inspects the database; if clean/empty, it populates all 8 demo accounts, portfolio assignments, seed requests, and notifications.
+   - Starts the HTTP service on port `4001`.
+4. **Next.js Web UI** starts on port `3002`, routing client requests through an internal network proxy to the API container.
+
+#### 3. Access the Platform
+Once the containers are healthy (typically 10-15 seconds):
+
+| Service | Host URL | Description |
+| :--- | :--- | :--- |
+| **Banking Web UI** | [http://localhost:3002](http://localhost:3002) | Customer, Advisor & Supervisor portals (with Quick Role Switcher) |
+| **Swagger OpenAPI Docs** | [http://localhost:4001/api/docs](http://localhost:4001/api/docs) | Interactive Swagger UI for all REST endpoints |
+| **API Healthcheck** | [http://localhost:4001/api/v1/health](http://localhost:4001/api/v1/health) | System health, database connection, and uptime status |
+| **PostgreSQL Database** | `localhost:5434` | DB: `proorga_banking`, User: `proorga`, Password: `proorga_secret` |
+| **Redis Cache** | `localhost:6380` | Redis 7 key-value store |
+
+> [!TIP]
+> You can log in using any of the pre-seeded credentials listed in [Section 4](#4-demo-accounts--credentials), or simply use the **Quick Demo Switcher** dropdown located in the header of the web application.
+
+---
+
+### Docker Management Commands Cheat Sheet
+
+| Action | Native Docker Command | Convenience pnpm Shortcut |
+| :--- | :--- | :--- |
+| **Build & Start all containers** | `docker compose up -d --build` | `pnpm docker:build` |
+| **Start existing containers** | `docker compose up -d` | `pnpm docker:up` |
+| **Stop all containers** | `docker compose down` | `pnpm docker:down` |
+| **View real-time combined logs** | `docker compose logs -f` | `pnpm docker:logs` |
+| **View specific service logs** | `docker compose logs -f api` *(or `web`, `postgres`)* | — |
+| **Check service status** | `docker compose ps` | — |
+| **Reseed demo dataset** | `docker compose exec -w /app/apps/api api ./node_modules/.bin/ts-node prisma/seed.ts` | `pnpm docker:seed` |
+| **Deploy migrations manually** | `docker compose exec -w /app/apps/api api ./node_modules/.bin/prisma migrate deploy` | `pnpm docker:migrate` |
+| **Run E2E scenarios against Docker** | `pnpm demo:scenarios` *(from host)* | `pnpm demo:scenarios` |
+| **Complete reset (wipe DB & volumes)** | `docker compose down -v` | `pnpm docker:clean` |
+
+---
+
+### Option B: Local Hybrid Development Setup (Hot-Reloading)
+
+For active feature development where you want instantaneous hot module reloading (HMR) for both backend and frontend:
+
+1. **Clone & install monorepo dependencies:**
    ```bash
    pnpm install
    ```
 
-2. **Start PostgreSQL & Redis background containers:**
-   *(Host ports configured: Postgres on 5434, Redis on 6380 to avoid local port conflicts)*
+2. **Start PostgreSQL & Redis background containers only:**
+   *(Host ports configured: Postgres on 5434, Redis on 6380 to avoid standard 5432/6379 local port conflicts)*
    ```bash
    docker compose up -d postgres redis
    ```
@@ -213,17 +278,71 @@ The platform includes a realistic, pre-seeded dataset. All passwords are set to 
    pnpm db:seed
    ```
 
-4. **Start the Backend API (Port 4001):**
+4. **Start the Backend API with watch mode (Port 4001):**
    ```bash
    pnpm dev:api
    # Swagger docs available at: http://localhost:4001/api/docs
    ```
 
-5. **Start the Frontend Web Application (Port 3002):**
+5. **Start the Frontend Web Application with Fast Refresh (Port 3002):**
    ```bash
    pnpm dev:web
    # Access application at: http://localhost:3002
    ```
+
+---
+
+### Docker Architecture & Configuration Details
+
+#### Persistent Volumes
+Docker volumes preserve state across container restarts and rebuilds:
+- `proorga_postgres_data`: Persistent storage for PostgreSQL database schemas, users, and audit logs.
+- `proorga_redis_data`: Persistent cache and session storage.
+- `proorga_uploads_data`: Persistent storage for uploaded supporting documents (PDFs, invoices, identity documents).
+
+#### AI Assistant Configuration in Docker
+The platform runs **100% offline out of the box** using a deterministic mock provider. You can switch to external LLM providers at any time by editing `.env`:
+```env
+# Built-in Mock (Default - zero external API keys needed)
+AI_PROVIDER=mock
+
+# Or switch to OpenAI:
+# AI_PROVIDER=openai
+# OPENAI_API_KEY=sk-proj-...
+# AI_MODEL=gpt-4o-mini
+
+# Or switch to Google Gemini:
+# AI_PROVIDER=gemini
+# GEMINI_API_KEY=AIzaSy...
+```
+Restart the API container to apply changes:
+```bash
+docker compose up -d api
+```
+
+#### Troubleshooting Docker Issues
+
+- **Port Conflict (`bind: address already in use`):**
+  If port `3002`, `4001`, `5434`, or `6380` is already in use by another application on your system, adjust the exposed ports in your `.env` file:
+  ```env
+  WEB_PORT=3005
+  API_PORT=4005
+  POSTGRES_PORT=5435
+  REDIS_PORT=6385
+  ```
+  Then restart with `docker compose up -d`.
+
+- **Resetting to a Pristine Demo State:**
+  To completely clear the database and reseed from scratch:
+  ```bash
+  docker compose down -v
+  docker compose up -d --build
+  ```
+
+- **Rebuilding after code changes:**
+  ```bash
+  docker compose up -d --build
+  ```
 
 ---
 

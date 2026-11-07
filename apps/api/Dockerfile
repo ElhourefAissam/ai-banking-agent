@@ -18,7 +18,7 @@ RUN pnpm --filter @proorga/shared-validation run build
 
 WORKDIR /app/apps/api
 RUN pnpm exec prisma generate
-RUN pnpm run build
+RUN rm -rf dist tsconfig.tsbuildinfo && pnpm run build
 
 FROM node:22-alpine AS runner
 
@@ -28,6 +28,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV API_PORT=4001
+ENV PATH="/app/apps/api/node_modules/.bin:/app/node_modules/.bin:${PATH}"
 
 COPY --from=builder /app ./
 
