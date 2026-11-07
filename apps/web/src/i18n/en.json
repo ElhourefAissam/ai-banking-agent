@@ -209,5 +209,38 @@
     "status": "Certificate Status",
     "tamperNotice": "Certified authentic and tamper-evident via SHA-256 cryptographic seal (Law 53-05).",
     "backHome": "Back to Platform"
+  },
+  "accountOperations": {
+    "title": "Comprehensive Account Operations & Movements History",
+    "subtitle": "Complete audit trail of executed transfers, temporary limit increases, and automatic restorations.",
+    "exportCsv": "Export Statement (CSV)",
+    "searchPlaceholder": "Search an operation...",
+    "dateCol": "Date & Time",
+    "natureCol": "Operation Type",
+    "detailCol": "Detail / Motive",
+    "referenceCol": "Reference",
+    "amountCol": "Financial Amount",
+    "limitImpactCol": "Limit Impact",
+    "nonMonetary": "Non-monetary",
+    "emptyMessage": "No operations recorded for this filter.",
+    "loadingMessage": "Loading operations history...",
+    "filters": {
+      "all": "All operations",
+      "financial": "Transfers & Movements",
+      "limit": "Limits & Requests"
+    },
+    "types": {
+      "TRANSFER_CREDIT": "Incoming Transfer",
+      "TRANSFER_DEBIT": "Outgoing Transfer",
+      "DIRECT_DEBIT": "Direct Debit",
+      "LIMIT_INCREASE_REQUESTED": "Request Filed",
+      "LIMIT_RECOMMENDED": "Recommendation",
+      "LIMIT_COMPLEMENT_REQUESTED": "Complement Requested",
+      "LIMIT_APPROVED": "Approved",
+      "LIMIT_ACTIVATED": "Limit Activated",
+      "LIMIT_EXPIRED_RESTORED": "Limit Restored",
+      "LIMIT_CANCELLED": "Cancellation",
+      "LIMIT_REJECTED": "Rejected"
+    }
   }
 }

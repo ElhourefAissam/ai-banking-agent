@@ -209,5 +209,38 @@
     "status": "حالة الشهادة",
     "tamperNotice": "وثيقة معتمدة ومحمية ضد التزوير بواسطة البصمة الرقمية المشفرة SHA-256 (القانون 53-05).",
     "backHome": "العودة إلى المنصة"
+  },
+  "accountOperations": {
+    "title": "السجل الشامل لعمليات وحركات الحساب",
+    "subtitle": "تتبع كامل للتحويلات المنفذة، الزيادات المؤقتة في الأسقف واستعادتها التلقائية.",
+    "exportCsv": "تصدير كشف العمليات (CSV)",
+    "searchPlaceholder": "البحث في العمليات...",
+    "dateCol": "التاريخ والوقت",
+    "natureCol": "طبيعة العملية",
+    "detailCol": "التفاصيل / السبب",
+    "referenceCol": "المرجع",
+    "amountCol": "المبلغ المالي",
+    "limitImpactCol": "تأثير السقف",
+    "nonMonetary": "غير مالي",
+    "emptyMessage": "لا توجد عمليات مسجلة لهذا المعيار.",
+    "loadingMessage": "جاري تحميل سجل العمليات...",
+    "filters": {
+      "all": "جميع العمليات",
+      "financial": "التحويلات والحركات المالية",
+      "limit": "الأسقف والطلبات"
+    },
+    "types": {
+      "TRANSFER_CREDIT": "تحويل وارد",
+      "TRANSFER_DEBIT": "تحويل صادر",
+      "DIRECT_DEBIT": "اقتطاع بنكي",
+      "LIMIT_INCREASE_REQUESTED": "طلب سقف مودع",
+      "LIMIT_RECOMMENDED": "توصية بالموافقة",
+      "LIMIT_COMPLEMENT_REQUESTED": "طلب وثائق تكميلية",
+      "LIMIT_APPROVED": "موافقة رسمية",
+      "LIMIT_ACTIVATED": "سقف مفعل",
+      "LIMIT_EXPIRED_RESTORED": "استعادة السقف الأصلي",
+      "LIMIT_CANCELLED": "إلغاء الطلب",
+      "LIMIT_REJECTED": "رفض الطلب"
+    }
   }
 }

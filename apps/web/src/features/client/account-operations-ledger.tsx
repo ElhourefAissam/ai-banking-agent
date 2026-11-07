@@ -123,81 +123,86 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
   };
 
   const getOperationBadge = (op: AccountOperation) => {
+    const translatedType =
+      t(`accountOperations.types.${op.type}`) !== `accountOperations.types.${op.type}`
+        ? t(`accountOperations.types.${op.type}`)
+        : op.type;
+
     switch (op.type) {
       case 'TRANSFER_CREDIT':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
             <ArrowDownLeft className="w-3 h-3 text-emerald-600" />
-            Virement Reçu
+            {translatedType}
           </span>
         );
       case 'TRANSFER_DEBIT':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
             <ArrowUpRight className="w-3 h-3 text-rose-600" />
-            Virement Émis
+            {translatedType}
           </span>
         );
       case 'DIRECT_DEBIT':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
             <CreditCard className="w-3 h-3 text-slate-500" />
-            Prélèvement
+            {translatedType}
           </span>
         );
       case 'LIMIT_ACTIVATED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
             <Zap className="w-3 h-3 text-emerald-600" />
-            Plafond Activé
+            {translatedType}
           </span>
         );
       case 'LIMIT_EXPIRED_RESTORED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900 border border-blue-200">
             <RotateCcw className="w-3 h-3 text-blue-600" />
-            Plafond Rétabli
+            {translatedType}
           </span>
         );
       case 'LIMIT_INCREASE_REQUESTED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-100 text-brand-900 border border-brand-200">
             <FileText className="w-3 h-3 text-brand-700" />
-            Demande Déposée
+            {translatedType}
           </span>
         );
       case 'LIMIT_APPROVED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
             <ShieldCheck className="w-3 h-3 text-purple-600" />
-            Accord Donné
+            {translatedType}
           </span>
         );
       case 'LIMIT_RECOMMENDED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-900 border border-indigo-200">
             <ShieldCheck className="w-3 h-3 text-indigo-600" />
-            Recommandation
+            {translatedType}
           </span>
         );
       case 'LIMIT_REJECTED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-200">
             <XCircle className="w-3 h-3 text-rose-600" />
-            Refus
+            {translatedType}
           </span>
         );
       case 'LIMIT_CANCELLED':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
             <RotateCcw className="w-3 h-3 text-slate-500" />
-            Annulation
+            {translatedType}
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-            {op.type}
+            {translatedType}
           </span>
         );
     }
@@ -213,11 +218,11 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
               <History className="w-4 h-4" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              Historique Intégral des Opérations & Mouvements du Compte
+              {t('accountOperations.title')}
             </h3>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Traçabilité complète des virements exécutés, relèvements temporaires et rétablissements de plafond.
+            {t('accountOperations.subtitle')}
           </p>
         </div>
 
@@ -250,7 +255,7 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
             className="border-slate-300 text-slate-700 hover:bg-slate-50"
           >
             <Download className="w-3.5 h-3.5 me-1.5 text-brand-600" />
-            Exporter Relevé CSV
+            {t('accountOperations.exportCsv')}
           </Button>
         </div>
       </div>
@@ -268,7 +273,7 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Toutes les opérations ({counts.all})
+            {t('accountOperations.filters.all')} ({counts.all})
           </button>
 
           <button
@@ -281,7 +286,7 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
             }`}
           >
             <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Virements & Mouvements ({counts.financial})</span>
+            <span>{t('accountOperations.filters.financial')} ({counts.financial})</span>
           </button>
 
           <button
@@ -294,7 +299,7 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Plafonds & Demandes ({counts.limit})</span>
+            <span>{t('accountOperations.filters.limit')} ({counts.limit})</span>
           </button>
         </div>
 
@@ -305,7 +310,7 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher une opération..."
+            placeholder={t('accountOperations.searchPlaceholder')}
             className="w-full ps-9 pe-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
@@ -317,25 +322,25 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
           <table className="w-full text-start text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4 text-start">Date & Heure</th>
-                <th className="py-3 px-4 text-start">Nature de l'Opération</th>
-                <th className="py-3 px-4 text-start">Détail / Motif</th>
-                <th className="py-3 px-4 text-start">Référence</th>
-                <th className="py-3 px-4 text-end">Montant Financier</th>
-                <th className="py-3 px-4 text-end">Impact Plafond</th>
+                <th className="py-3 px-4 text-start">{t('accountOperations.dateCol')}</th>
+                <th className="py-3 px-4 text-start">{t('accountOperations.natureCol')}</th>
+                <th className="py-3 px-4 text-start">{t('accountOperations.detailCol')}</th>
+                <th className="py-3 px-4 text-start">{t('accountOperations.referenceCol')}</th>
+                <th className="py-3 px-4 text-end">{t('accountOperations.amountCol')}</th>
+                <th className="py-3 px-4 text-end">{t('accountOperations.limitImpactCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-400 italic">
-                    Chargement de l'historique des opérations...
+                    {t('accountOperations.loadingMessage')}
                   </td>
                 </tr>
               ) : filteredOperations.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-400 italic">
-                    Aucune opération enregistrée pour ce filtre.
+                    {t('accountOperations.emptyMessage')}
                   </td>
                 </tr>
               ) : (
@@ -398,7 +403,9 @@ export const AccountOperationsLedger: React.FC<AccountOperationsLedgerProps> = (
                             {isDebit ? '−' : '+'} {formatCurrency(op.amount)}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-[11px]">Non monétaire</span>
+                          <span className="text-slate-400 text-[11px]">
+                            {t('accountOperations.nonMonetary')}
+                          </span>
                         )}
                       </td>
 

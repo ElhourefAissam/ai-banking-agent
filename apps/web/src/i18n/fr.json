@@ -209,5 +209,38 @@
     "status": "Statut de l'Attestation",
     "tamperNotice": "Certifié conforme et inviolable par empreinte cryptographique SHA-256 (Loi 53-05).",
     "backHome": "Retour à la plateforme"
+  },
+  "accountOperations": {
+    "title": "Historique Intégral des Opérations & Mouvements du Compte",
+    "subtitle": "Traçabilité complète des virements exécutés, relèvements temporaires et rétablissements de plafond.",
+    "exportCsv": "Exporter Relevé CSV",
+    "searchPlaceholder": "Rechercher une opération...",
+    "dateCol": "Date & Heure",
+    "natureCol": "Nature de l'Opération",
+    "detailCol": "Détail / Motif",
+    "referenceCol": "Référence",
+    "amountCol": "Montant Financier",
+    "limitImpactCol": "Impact Plafond",
+    "nonMonetary": "Non monétaire",
+    "emptyMessage": "Aucune opération enregistrée pour ce filtre.",
+    "loadingMessage": "Chargement de l'historique des opérations...",
+    "filters": {
+      "all": "Toutes les opérations",
+      "financial": "Virements & Mouvements",
+      "limit": "Plafonds & Demandes"
+    },
+    "types": {
+      "TRANSFER_CREDIT": "Virement Reçu",
+      "TRANSFER_DEBIT": "Virement Émis",
+      "DIRECT_DEBIT": "Prélèvement",
+      "LIMIT_INCREASE_REQUESTED": "Demande Déposée",
+      "LIMIT_RECOMMENDED": "Recommandation",
+      "LIMIT_COMPLEMENT_REQUESTED": "Complément Requis",
+      "LIMIT_APPROVED": "Accord Donné",
+      "LIMIT_ACTIVATED": "Plafond Activé",
+      "LIMIT_EXPIRED_RESTORED": "Plafond Rétabli",
+      "LIMIT_CANCELLED": "Annulation",
+      "LIMIT_REJECTED": "Refus"
+    }
   }
 }
